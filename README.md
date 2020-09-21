@@ -41,7 +41,7 @@ Modules used:
 * `Variant` - removal of all non-polymorphic sites after `Gubbins` (`--variant_sites true`)
 
 
-## Candidate Variants
+## Candidate Variants (ONT)
 
 You can use a candidate variant file to process with `Megalodon` and use the temrinal client of `NanoPath` to merge nanoproe and cadidate variants using various filtes. This will allow you to reconstruct a hybrid-phylogenetic tree (Illumina + ONT) in `np-core/np-phybeast` which can be used for contextualising multiplex nanopore panels within a larger evolutionary history of a lineage, for example sequencing outbreak isolates of a known sequence type, for which sufficient population-wide sequencing data is available (and from which the candidate variants were called).
 
@@ -56,6 +56,6 @@ Modules used:
 * `Megalodon` - base- and variant calling using `Guppy`
 * `NanoPath` - 
 
-## ONT Variants
+## *De novo* Variants (ONT)
 
 *De novo* variant calling from nanopore seqeunce data and assessment against reference `VCF`.
