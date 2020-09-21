@@ -43,7 +43,7 @@ Modules used:
 
 ## Megalodon Candidate Variants
 
-`Megalodon` uses `Guppy` and should be run using `GPU` resourcing through configuration files and profiles - for more information see the `np-core/configs` repository.
+`Megalodon` uses `Guppy` and should be run using `GPU` resourcing through configuration files and profiles - if you require more information regarding the selection of resources for this workflow, please visit the [`np-core/configs`](https://github.com/np-core/configs) repository.
 
 ```
 nextflow run np-core/np-variants --config nextflow -profile gpu_docker --fast5 fast5/ --candidates core.vcf
