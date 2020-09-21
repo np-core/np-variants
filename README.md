@@ -33,7 +33,7 @@ A typical command for constructing the reference alignment and core-genome singl
 
 ## Core Variants (Illumina)
 
-In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to call per-isolate variants as well as non-recombinant core-genome variants for a set of isolates from high-quality short-read sequence data, targeted for use in phylogenetics (`np-core/np-phybeast`):
+In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to generate a non-recombinant core-genome alignment for the provided set of isolates (includes output of non-core per-isolate variant calls) from high-quality short-read sequence data:
 
 ```
 nextflow run np-core/np-variants --workflow core --fastq isolates/ --fasta isolate_asemblies/ --variant_sites true
