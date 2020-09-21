@@ -4,7 +4,7 @@
 ![](https://img.shields.io/badge/version-0.1.0-addd8e.svg)
 ![](https://img.shields.io/badge/biorxiv-v0-f7fcb9.svg)
 
-Reference alignment and variant calling for bacterial pathogens :orangutan:
+Reference alignment and haploid variant calling for bacterial pathogens :orangutan:
 
 ```
 nextflow np-core/np-variants --help true
