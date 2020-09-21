@@ -25,9 +25,9 @@ nextflow np-core/np-variants --help true
 
 Usage:
 
-A typical command for constructing the reference alignment and core-genome single nucleotide polymorphism calls:
+A typical command for computing core genome variant calls from short-read data with Snippy:
 
-    nextflow run np-core/np-variants --workflow core --fastq isolates/ --tail "_R{1,2}.fastq.gz"
+    nextflow run np-core/np-variants --workflow core --fastq isolates/
 
 ```
 
