@@ -14,7 +14,7 @@ nextflow np-core/np-variants --help true
 - Workflows
    - [Core Variants (Illumina)](#core-variants-illumina)
    - [Candiate Variants (ONT)](#candidate-variants-ont)
-   - [*De novo* variants (ONT)](#de-novo-variants-ont)
+   - [*De novo* Variants (ONT)](#de-novo-variants-ont)
 
 ## Usage
 
@@ -48,7 +48,7 @@ Modules used:
 
 ## Candidate Variants (ONT)
 
-Candidate variants (usually single nucleotide polymorphisms) can be used as input to anchor the neural network basecalling output from `Guppy` and call haplodid candidates with `Megalodon`. `NanoPath` then merges candidates and calls into a filtered alignment which can be used for 'hybrid' phylogenetic trees, combining both Illumina and ONT sequence data. While this is useful to reconsruct divergences within a known evolutionary background, for example when producing barcoded nanopore panels from an outbreak of a known lineage for which sufficient background data is available, please note that within-oubtreak branch lengths would not include novel variation (particularly if the outbreak-divergence is deeper, that is, if the outbreak has been persisting and accumulated novel variation) and thus, downstream, estimates of within-oubtreak parameters based on candidate variants may not be possible.
+Candidate variants (usually single nucleotide polymorphisms, for example core genome variants called with `--workflow core`) can be used as input to anchor the neural network basecalling output from `Guppy` and call candidates with `Megalodon`. `NanoPath` then merges candidates and calls into a filtered alignment which can be used for 'hybrid' phylogenetic trees, combining both Illumina and ONT sequence data. While this is useful to reconsruct divergences within a known evolutionary background, for example when producing barcoded nanopore panels from an outbreak of a known lineage for which sufficient background data is available, please note that within-outbreak branches would not consider novel variation (particularly if divergence is deep, that is, if the outbreak has been persisting and accumulated novel variation for some time) and thus, within-oubtreak phylodynamic estimates based on candidate variants may not be accurate.
 
 `Guppy` is used for basecalling and should be run using `GPU` resourcing through configuration files and profiles - if you require more information regarding the selection of resources for this workflow, please visit the [`np-core/configs`](https://github.com/np-core/configs) repository. In this example the local `JCU` configuration for our `Tesla` GPU server is used:
 
