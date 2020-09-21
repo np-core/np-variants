@@ -19,7 +19,7 @@ nextflow np-core/np-variants --help true
 
 Usage:
 
-A typical command for constructing the reference alignment and call core-genome single nucleotide polymorphisms:
+A typical command for constructing the reference alignment and core-genome single nucleotide polymorphism calls:
 
     nextflow run np-core/np-variants --illumina fastq/ --tail "_R{1,2}.fastq.gz"
 
