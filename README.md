@@ -38,7 +38,7 @@ Modules used:
 * `Fastp` - quality control of `fastq` sequence reads 
 * `Snippy` - reference alignment and core variant calls from `fastq` and `fasta`
 * `Gubbins` - removal of recombinant sites from the reference variant alignment
-* `Variant` - removal of all non-polymorphic sites after `Gubbins` (`--variant_sites true`)
+* `Variant` - removal of all non-polymorphic sites (`--variant_sites true`)
 
 
 ## Candidate Variants (ONT)
