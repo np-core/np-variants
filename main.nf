@@ -38,9 +38,43 @@ import java.nio.file.Paths
 nextflow.enable.dsl=2
 
 
+// Workflow selection 
+params.workflow = "core"
+params.outdir = "$PWD/results"
+
+// Core (Illumina)
+
+params.fastq = "*.fastq"
+params.fasta = "*.fasta"
+
+params.reference = "$PWD/ref.fasta"
+check_path(params.reference)
+reference = file(params.reference)  // stage the reference
+
+// Candidates (Megalodon)
+
+params.fast5 = ""
+
+params.panels = "barcode_panels"
+check_path(params.panels)
+
+params.candidates = "candidates.vcf"
+check_path(params.candidates)
+candidates = file(candidates) // stage file
+
+params.reads_per_guppy_batch = 50
+
+params.devices = "1"
+params.guppy_server_path = "/opt-guppy/bin/guppy_basecall_server"  // should not be changed [container path]
+params.guppy_params = "-d /models" // should always include "-d /models" or "-d /models/barcoding" or "-d /models/rerio_barcoding" [container path]
+params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
+
+
+
+
 // Workflow version
 
-version = '0.1.1'
+version = '0.1.4'
 
 def helpMessage() {
 
@@ -86,31 +120,33 @@ def helpMessage() {
 
     Subworkflow selection:
 
-        --workflow              select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]
-        --outdir                output directory for results from workflow [${params.outdir}]
+        --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]
+        --outdir                    output directory for results from workflow [${params.outdir}]
 
     
     Subworkflow - Core Variants:
 
-        --fastq | --fasta       glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
-        --reference             reference genome (FASTA) for alignment and variant calling [${params.reference}]
+        --fastq | --fasta           glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
+        --reference                 reference genome (FASTA) for alignment and variant calling [${params.reference}]
 
-        --variant_sites         remove monomorphic sites from alignment after Gubbins [${params.variant_sites}]
-        --snippy_params         string of additional parameters passed to Snippy ["${params.snippy_params}"]
-        --gubbins_params        string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
+        --variant_sites             remove monomorphic sites from alignment after Gubbins [${params.variant_sites}]
+        --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
+        --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
 
     Subworkflow - Megalodon:
 
         Model configuration files for Guppy can be found inside the container at: /models
 
-        --fast5                 glob of directories containing Fast5 files for Megalodon [${prams.fast5}]
-        --panels                path to nested panel directories, which contain barcode subdirectories (e.g. fast5/panel1/barcode01) [$params.panels]
-        --candidates            VCF candidate variant file to select variants to call with Megalodon [${params.candidates}]
+        --fast5                     glob of directories containing Fast5 files for Megalodon [${prams.fast5}]
+        --panels                    path to nested panel directories, which contain barcode subdirectories (e.g. fast5/panel1/barcode01) [$params.panels]
+        --candidates                VCF candidate variant file to select variants to call with Megalodon [${params.candidates}]
 
-        --guppy_server_path     server path to guppy, inside container at: "/opt-guppy/bin/guppy_basecall_server" [${params.guppy_server_path}] 
-        --guppy_params          string of additional parameters to pass to guppy, should contain model directory inside container: "-d /models" [${params.guppy_params}]
-        --guppy_config          name of guppy basecalling configuration file [${params.guppy_config}]
-        --guppy_devices         string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
+        --reads_per_guppy_batch     number of reads to batch for concurrent processing with Guppy [${params.reads_per_guppy_batch}]
+        --guppy_server_path         server path to guppy, inside container at: "/usr/bin/local" [${params.guppy_server_path}] 
+        --guppy_params              string of additional parameters to pass to Guppy, should contain model directory inside container: "-d /models" [${params.guppy_params}]
+        --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
+        --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
+
     =========================================
 
     """.stripIndent()
@@ -123,71 +159,37 @@ if (params.help){
     exit 0
 }
 
-def check_file(file) {
+def check_path(p) {
     
     path = Paths.get(file)
 
     if (path.exists()){
         log.info"""
-        Detected input file: $file
+        Detected input path: $p
         """
     } else {
         log.info"""
-        Failed to detect input file: $file
+        Failed to detect input path: $p
         """
         exit 0
     }
 }
 
 
-if (params.recursive){
-    _fastq_ont = ["${params.files}/**/*.fq", "${params.files}/**/*.fastq"]
-    _fastq_illumina = ["${params.files}/**/*${params.tail}.fq.gz", "${params.files}/**/*${params.tail}.fastq.gz"]
-} else {
-    _fastq_ont = ["${params.files}/*.fq", "${params.files}/*.fastq"]
-    _fastq_illumina = ["${params.files}/*${params.tail}.fq.gz", "${params.files}/*${params.tail}.fastq.gz"]
-}
-
 // Helper functions
 
-def get_single_fastx(glob){
+def get_single_fasta(glob){
     return channel.fromPath(glob) | map { file -> tuple(file.baseName, file) }
 }
 def get_paired_fastq(glob){
     return channel.fromFilePairs(glob, flat: true)
 }
-def get_fast5(dir){
-    return channel.fromPath("$params.fast5", type: 'dir').map { port += 1; tuple(port, it.getParent().getName(), it.getName(), it) }
+def get_fast5_dir(dir){
+    return channel.fromPath("$params.fast5", type: 'dir').map { tuple(it.getName(), it) }
 }
-def get_barcode_fast5(dir){
-    port = 5555
-    return channel.fromPath("$params.panels/**/*", type: 'dir').map { port += 1; tuple(port, it.getParent().getName(), it.getName(), it) }
+def get_fast5_panel(dir){
+    return channel.fromPath("$params.panels/**/*", type: 'dir').map { tuple(it.getParent().getName(), it.getName(), it) }
 }
-
-// Workflow selection 
-params.workflow = "core"
-
-
-// Core (Illumina)
-
-params.fastq = "*.fastq"
-params.fasta = "*.fasta"
-
-params.reference = "$PWD/ref.fasta"
-check_file(params.reference)
-reference = file(params.reference)  // stage the reference
-
-
-// Candidates (Megalodon)
-params.fast5 = ""
-params.panels = "$HOME/LINEAGES/ST93/Megalodon"
-params.candidates = "$HOME/LINEAGES/ST93/core.vcf"
-params.devices = "1"
-params.guppy_server_path = "/opt-guppy/bin/guppy_basecall_server"
-params.guppy_params = "--trim_barcodes --chunk_size 512 --chunks_per_runner 2048 --gpu_runners_per_device 4"
-params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
-
-params.outdir = "$PWD/test_out"
 
 include { Fastp } from './modules/fastp'
 include { SnippyFastq } from './modules/snippy'
@@ -195,6 +197,8 @@ include { SnippyFasta } from './modules/snippy'
 include { SnippyCore  } from './modules/snippy'
 include { Gubbins  } from './modules/gubbins'
 include { Variants  } from './modules/PhyBeast'
+include { MegalodonVariants } from './modules/megalodon'
+include { MegalodonVariantsPanels } from './modules/megalodon'
 
 workflow snippy_fastq {
     take:
@@ -203,7 +207,7 @@ workflow snippy_fastq {
         Fastp(reads)
         SnippyFastq(Fastp.out, reference)
     emit:
-        SnippyFastq.out // id, results
+        SnippyFastq.out // results
 }       
 
 workflow snippy_fasta {
@@ -212,7 +216,7 @@ workflow snippy_fasta {
     main:
         SnippyFasta(contigs, reference)
     emit:
-        SnippyFasta.out // id, results
+        SnippyFasta.out // results
 }  
 
 workflow snippy_core {
@@ -220,37 +224,44 @@ workflow snippy_core {
         snippy // results
     main:
         SnippyCore(snippy.collect(), reference)
-        Gubbins(SnippyCore.out) // wgs snp alignment
+        Gubbins(SnippyCore.out[0]) // wgs snp alignment
     emit:
         Gubbins.out // non-recombinant snp core alignment
 }
 
-
-
-include { MegalodonVariants } from './modules/megalodon'
-
-
-
         
-workflow megalodon_variants {
+workflow megalodon_fast5 {
     take:
-        barcodes
+        fast5  // id, f5d
     main:
-        MegalodonVariants(reference, barcodes)
+        MegalodonVariants(reference, candidates, fast5)
+    emit:
+        MegalodonVariants.out
+}
+
+workflow megalodon_panels {
+    take:
+        panels // panel, barcode, f5d
+    main:
+        MegalodonVariants(reference, candidates, panels)
     emit:
         MegalodonVariants.out
 }
 
 workflow {
-    if (params.subworkflow == "core"){
+    if (params.workflow == "core"){
 
-        fasta = get_single_fastx(params.fasta) | snippy_fasta
+        fasta = get_single_fasta(params.fasta) | snippy_fasta
         fastq = get_paired_fastq(params.fastq) | snippy_fastq
         fasta.mix(fastq) | snippy_core
     
-    } else if (params.subworkflow == "candidate"){
-
-        get_barcode_fast5(params.panels) | megalodon_variants
+    } else if (params.workflow == "candidate"){
+        
+        if (params.panels){
+            get_fast5_panels(params.panels) | megalodon_panels
+        } else {
+            get_fast5_dir(params.fast5) | megalodon_fast5
+        }
 
     }
 }
