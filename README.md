@@ -33,7 +33,7 @@ A typical command for constructing the reference alignment and core-genome singl
 
 ## Core Variants (Illumina)
 
-In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to call non-recombinant core-genome variants for a set of isolates freom high-quality short-read sequence data:
+In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to call per-isolate variants as well as non-recombinant core-genome variants for a set of isolates from high-quality short-read sequence data, targeted for use in phylogenetics (`np-core/np-phybeast`):
 
 ```
 nextflow run np-core/np-variants --workflow core --fastq isolates/ --fasta isolate_asemblies/ --variant_sites true
@@ -41,16 +41,16 @@ nextflow run np-core/np-variants --workflow core --fastq isolates/ --fasta isola
 
 Modules used:
 
-* `Fastp` - quality control of `fastq` sequence reads 
-* `Snippy` - reference alignment and core variant calls from `fastq` and `fasta`
+* `Fastp` - quality control of `--fastq` sequence reads 
+* `Snippy` - reference alignment and core variant calls from `--fastq` and `--fasta`
 * `Gubbins` - removal of recombinant sites from the reference variant alignment
 * `PhyBeast` - support module to remove of all non-polymorphic sites after `Gubbins`
 
 ## Candidate Variants (ONT)
 
-You can use a candidate variant file to process with `Megalodon` and use the temrinal client of `NanoPath` to merge nanoproe and cadidate variants using various filtes. This will allow you to reconstruct a hybrid-phylogenetic tree (Illumina + ONT) in `np-core/np-phybeast` which can be used for contextualising multiplex nanopore panels within a larger evolutionary history of a lineage, for example sequencing outbreak isolates of a known sequence type, for which sufficient population-wide sequencing data is available (and from which the candidate variants were called).
+Candidate variants (usually single nucleotide polymorphisms) can be used as input to anchor the neural network basecalling output from `Guppy` and call haplodid candidates with `Megalodon`. `NanoPath` then merges candidates and calls into a filtered alignment which can be used for 'hybrid' phylogenetic trees, combining both Illumina and ONT sequence data. While this is useful to reconsruct divergences within a known evolutionary background, for example when producing barcoded nanopore panels from an outbreak of a known lineage for which sufficient background data is available, please note that within-oubtreak branch lengths would not include novel variation (particularly if the outbreak-divergence is deeper, that is, if the outbreak has been persisting and accumulated novel variation) and thus, downstream, estimates of within-oubtreak parameters based on candidate variants may not be possible.
 
-`Guppy` is used for basecalling and should be run using `GPU` resourcing through configuration files and profiles - if you require more information regarding the selection of resources for this workflow, please visit the [`np-core/configs`](https://github.com/np-core/configs) repository. In this example we use the local `JCU` configuration for our `Tesla` GPU server:
+`Guppy` is used for basecalling and should be run using `GPU` resourcing through configuration files and profiles - if you require more information regarding the selection of resources for this workflow, please visit the [`np-core/configs`](https://github.com/np-core/configs) repository. In this example the local `JCU` configuration for our `Tesla` GPU server is used:
 
 ```
 nextflow run np-core/np-variants --config jcu -profile tesla --workflow candidate --fast5 fast5/ --candidates core.vcf
@@ -58,8 +58,8 @@ nextflow run np-core/np-variants --config jcu -profile tesla --workflow candidat
 
 Modules used:
 
-* `Megalodon` - base- and variant calling using `Guppy`
-* `NanoPath` - 
+* `Megalodon` - basecalling and variant anchoring using `Guppy`
+* `NanoPath` - merging and filtering of candidate and called variants
 
 ## *De novo* Variants (ONT)
 
