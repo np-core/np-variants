@@ -41,9 +41,11 @@ Modules used:
 * `Variant` - removal of all non-polymorphic sites after `Gubbins` (`--variant_sites true`)
 
 
-## Megalodon Candidate Variants
+## Candidate Variants
 
-`Megalodon` uses `Guppy` and should be run using `GPU` resourcing through configuration files and profiles - if you require more information regarding the selection of resources for this workflow, please visit the [`np-core/configs`](https://github.com/np-core/configs) repository.
+You can use a candidate variant file to process with `Megalodon` and use the temrinal client of `NanoPath` to merge nanoproe and cadidate variants using various filtes. This will allow you to reconstruct a hybrid-phylogenetic tree (Illumina + ONT) in `np-core/np-phybeast` which can be used for contextualising multiplex nanopore panels within a larger evolutionary history of a lineage, for example sequencing outbreak isolates of a known sequence type, for which sufficient population-wide sequencing data is available (and from which the candidate variants were called).
+
+`Guppy` is used for basecalling and should be run using `GPU` resourcing through configuration files and profiles - if you require more information regarding the selection of resources for this workflow, please visit the [`np-core/configs`](https://github.com/np-core/configs) repository.
 
 ```
 nextflow run np-core/np-variants --config nextflow -profile gpu_docker --fast5 fast5/ --candidates core.vcf
@@ -51,7 +53,8 @@ nextflow run np-core/np-variants --config nextflow -profile gpu_docker --fast5 f
 
 Modules used:
 
-* `Megalodon` which also uses `Guppy`
+* `Megalodon` - base- and variant calling using `Guppy`
+* `NanoPath` - 
 
 ## ONT Variants
 
