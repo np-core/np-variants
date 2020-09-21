@@ -10,6 +10,12 @@ Reference alignment and variant calling for bacterial pathogens :orangutan:
 nextflow np-core/np-variants --help true
 ```
 
+- [Usage](#usage)
+- Workflows
+   - [Core Variants (Illumina)](#core-variants-illumina)
+   - [Candiate Variants (ONT)](#candidate-variants-ont)
+   - [*De novo* variants (ONT)](#de-novo-variants-ont)
+
 ## Usage
 
 ```
@@ -38,8 +44,7 @@ Modules used:
 * `Fastp` - quality control of `fastq` sequence reads 
 * `Snippy` - reference alignment and core variant calls from `fastq` and `fasta`
 * `Gubbins` - removal of recombinant sites from the reference variant alignment
-* `Variant` - removal of all non-polymorphic sites (`--variant_sites true`)
-
+* `PhyBeast` - support module to remove of all non-polymorphic sites after `Gubbins`
 
 ## Candidate Variants (ONT)
 
