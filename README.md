@@ -24,3 +24,35 @@ A typical command for constructing the reference alignment and core-genome singl
     nextflow run np-core/np-variants --illumina fastq/ --tail "_R{1,2}.fastq.gz"
 
 ```
+
+## Core Variants (Illumina)
+
+In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to call non-recombinant core-genome variants for a set of isolates with Illumina PE reads.
+
+```
+nextflow run np-core/np-variants --fastq fastq/ --variants_sites true
+```
+
+Modules used:
+
+* `Fastp` - quality control of `fastq` sequence reads 
+* `Snippy` - reference alignment and core variant calls from `fastq` and `fasta`
+* `Gubbins` - removal of recombinant sites from the reference variant alignment
+* `Variant` - removal of all non-polymorphic sites after `Gubbins` (`--variant_sites true`)
+
+
+## Megalodon Candidate Variants
+
+`Megalodon` uses `Guppy` and should be run using `GPU` resourcing through configuration files and profiles - for more information see the `np-core/configs` repository.
+
+```
+nextflow run np-core/np-variants --config nextflow -profile gpu_docker --fast5 fast5/ --candidates core.vcf
+```
+
+Modules used:
+
+* `Megalodon` which also uses `Guppy`
+
+## ONT Variants
+
+*De novo* variant calling from nanopore seqeunce data and assessment against reference `VCF`.
