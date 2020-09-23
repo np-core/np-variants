@@ -43,7 +43,7 @@ params.outdir = "$PWD/results"
 
 // Core (Illumina)
 
-params.fastq = "*.fastq"
+params.fastq = "*_R{1,2}.fastq"
 params.fasta = "*.fasta"
 
 params.reference = "$PWD/ref.fasta"
@@ -158,7 +158,7 @@ if (params.help){
 
 def check_path(p) {
     
-    path = Paths.get(file)
+    path = Paths.get(p)
 
     if (path.exists()){
         log.info"""
