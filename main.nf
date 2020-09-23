@@ -271,16 +271,17 @@ workflow {
     // }
     
     if (params.fastq){
-        fastq = get_paired_fastq(params.fastq) | view
+        fastq = get_paired_fastq(params.fastq)
     } else {
         fastq = channel.empty()
-    }
-    
+    }    
 
     if (params.fasta){
-        fasta = get_single_fasta(params.fasta) | view
+        fasta = get_single_fasta(params.fasta)
     } else {
         fasta = channel.empty()
     }
+
+    fasta.mix(fastq) | view
 
 }
