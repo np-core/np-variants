@@ -255,9 +255,10 @@ workflow megalodon_panels {
 
 workflow {
     if (params.workflow == "core"){
+        println "Core workflow selected."
 
         fasta = get_single_fasta(params.fasta) | view
-        fastq = get_paired_fastq(params.fastq) | view
+        //fastq = get_paired_fastq(params.fastq) | view
         // fasta.mix(fastq) | snippy_core
     
     } else if (params.workflow == "candidate"){
