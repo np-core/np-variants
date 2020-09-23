@@ -200,7 +200,6 @@ include { SnippyFastq } from './modules/snippy'
 include { SnippyFasta } from './modules/snippy'
 include { SnippyCore  } from './modules/snippy'
 include { Gubbins  } from './modules/gubbins'
-include { Variants  } from './modules/PhyBeast'
 include { MegalodonVariants } from './modules/megalodon'
 include { MegalodonVariantsPanels } from './modules/megalodon'
 
