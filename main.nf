@@ -61,9 +61,9 @@ params.workflow = "core"
 params.outdir = "$PWD/results"
 
 
-params.reference = "$PWD/ref.fasta"
+params.reference = "" // FASTA reference genome
 if (params.reference){
-    check_path(params.reference) // required
+    check_path(params.reference)
     reference = file(params.reference)  // stage the reference
 } else {
     reference = ""
