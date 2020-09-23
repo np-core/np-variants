@@ -37,6 +37,25 @@ import java.nio.file.Paths
 
 nextflow.enable.dsl=2
 
+// Helper functions
+
+def check_path(p) {
+    
+    path = Paths.get(p)
+
+    if (path.exists()){
+        log.info"""
+        Detected input path: $p
+        """
+    } else {
+        log.info"""
+        Failed to detect input path: $p
+        """
+        exit 0
+    }
+}
+
+
 // Workflow selection 
 params.workflow = "core"
 params.outdir = "$PWD/results"
@@ -71,7 +90,7 @@ if (params.candidates){
 
 params.devices = "1"
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // should not be changed
-params.guppy_params = "-d /guppy_models " // should always include "-d /guppy_models" or "-d /rerio_models/" with "/.../barcoding" models
+params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" with "/.../barcoding" models
 params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
 params.reads_per_guppy_batch = 50
 
@@ -163,30 +182,13 @@ if (params.help){
     exit 0
 }
 
-def check_path(p) {
-    
-    path = Paths.get(p)
-
-    if (path.exists()){
-        log.info"""
-        Detected input path: $p
-        """
-    } else {
-        log.info"""
-        Failed to detect input path: $p
-        """
-        exit 0
-    }
-}
-
-
 // Helper functions
 
 def get_single_fasta(glob){
-    return channel.fromPath(glob) | map { file -> tuple(file.baseName, file) }
+    channel.fromPath(glob, type: 'file') | map { path -> tuple(path.baseName, path) }
 }
 def get_paired_fastq(glob){
-    return channel.fromFilePairs(glob, flat: true)
+    return channel.fromFilePairs(glob, flat: false)
 }
 def get_fast5_dir(dir){
     return channel.fromPath(dir, type: 'dir').map { tuple(it.getName(), it) }
