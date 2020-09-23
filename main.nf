@@ -44,7 +44,7 @@ params.outdir = "$PWD/results"
 // Core (Illumina)
 
 params.fastq = "*_R{1,2}.fastq"
-params.fasta = "*.fasta"
+params.fasta = ""
 
 params.reference = "$PWD/ref.fasta"
 check_path(params.reference) // required
