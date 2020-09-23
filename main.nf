@@ -62,12 +62,9 @@ params.outdir = "$PWD/results"
 
 
 params.reference = "" // FASTA reference genome
-if (params.reference){
-    check_path(params.reference)
-    reference = file(params.reference)  // stage the reference
-} else {
-    reference = ""
-}
+check_path(params.reference) // required
+reference = file(params.reference)  // stage the reference
+
 
 // Core (Illumina)
 params.fastq = "*_R{1,2}.fastq"
