@@ -37,7 +37,6 @@ import java.nio.file.Paths
 
 nextflow.enable.dsl=2
 
-
 // Workflow selection 
 params.workflow = "core"
 params.outdir = "$PWD/results"
@@ -53,7 +52,7 @@ reference = file(params.reference)  // stage the reference
 
 // Candidates (Megalodon)
 
-params.fast5 = ""
+params.path = ""
 
 params.panels = "barcode_panels"
 check_path(params.panels)
@@ -62,13 +61,12 @@ params.candidates = "candidates.vcf"
 check_path(params.candidates)
 candidates = file(candidates) // stage file
 
-params.reads_per_guppy_batch = 50
 
 params.devices = "1"
-params.guppy_server_path = "/opt-guppy/bin/guppy_basecall_server"  // should not be changed [container path]
-params.guppy_params = "-d /models" // should always include "-d /models" or "-d /models/barcoding" or "-d /models/rerio_barcoding" [container path]
+params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // should not be changed
+params.guppy_params = "-d /guppy_models " // should always include "-d /guppy_models" or "-d /rerio_models/" with "/.../barcoding" models
 params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
-
+params.reads_per_guppy_batch = 50
 
 
 
@@ -123,7 +121,6 @@ def helpMessage() {
         --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]
         --outdir                    output directory for results from workflow [${params.outdir}]
 
-    
     Subworkflow - Core Variants:
 
         --fastq | --fasta           glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
@@ -133,17 +130,17 @@ def helpMessage() {
         --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
         --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
 
-    Subworkflow - Megalodon:
+    Subworkflow - Megalodon Haploid Variants:
 
-        Model configuration files for Guppy can be found inside the container at: /models
+        Model configuration files for Guppy can be found inside the container at: /guppy_models
 
-        --fast5                     glob of directories containing Fast5 files for Megalodon [${prams.fast5}]
+        --path                      directory or glob of directories containing Fast5 files for a single sample [${params.path}]
         --panels                    path to nested panel directories, which contain barcode subdirectories (e.g. fast5/panel1/barcode01) [$params.panels]
         --candidates                VCF candidate variant file to select variants to call with Megalodon [${params.candidates}]
 
         --reads_per_guppy_batch     number of reads to batch for concurrent processing with Guppy [${params.reads_per_guppy_batch}]
         --guppy_server_path         server path to guppy, inside container at: "/usr/bin/local" [${params.guppy_server_path}] 
-        --guppy_params              string of additional parameters to pass to Guppy, should contain model directory inside container: "-d /models" [${params.guppy_params}]
+        --guppy_params              string of additional parameters to pass to Guppy, should contain model directory inside container: "-d /guppy_models" [${params.guppy_params}]
         --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
         --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
 
@@ -185,10 +182,10 @@ def get_paired_fastq(glob){
     return channel.fromFilePairs(glob, flat: true)
 }
 def get_fast5_dir(dir){
-    return channel.fromPath("$params.fast5", type: 'dir').map { tuple(it.getName(), it) }
+    return channel.fromPath(dir, type: 'dir').map { tuple(it.getName(), it) }
 }
 def get_fast5_panel(dir){
-    return channel.fromPath("$params.panels/**/*", type: 'dir').map { tuple(it.getParent().getName(), it.getName(), it) }
+    return channel.fromPath("${dir}/**/*", type: 'dir').map { tuple(it.getParent().getName(), it.getName(), it) }
 }
 
 include { Fastp } from './modules/fastp'
@@ -230,7 +227,7 @@ workflow snippy_core {
 }
 
         
-workflow megalodon_fast5 {
+workflow megalodon_dir {
     take:
         fast5  // id, f5d
     main:
@@ -243,9 +240,9 @@ workflow megalodon_panels {
     take:
         panels // panel, barcode, f5d
     main:
-        MegalodonVariants(reference, candidates, panels)
+        MegalodonVariantsPanels(reference, candidates, panels)
     emit:
-        MegalodonVariants.out
+        MegalodonVariantsPanels.out
 }
 
 workflow {
@@ -260,7 +257,7 @@ workflow {
         if (params.panels){
             get_fast5_panels(params.panels) | megalodon_panels
         } else {
-            get_fast5_dir(params.fast5) | megalodon_fast5
+            get_fast5_dir(params.path) | megalodon_dir
         }
 
     }
