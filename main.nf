@@ -47,20 +47,25 @@ params.fastq = "*_R{1,2}.fastq"
 params.fasta = "*.fasta"
 
 params.reference = "$PWD/ref.fasta"
-check_path(params.reference)
+check_path(params.reference) // required
 reference = file(params.reference)  // stage the reference
 
 // Candidates (Megalodon)
 
 params.path = ""
 
-params.panels = "barcode_panels"
-check_path(params.panels)
+params.panels = ""
 
-params.candidates = "candidates.vcf"
-check_path(params.candidates)
+if (params.panels){
+    check_path(params.panels)
+}
+
+params.candidates = "" // VCF
+if (params.candidates){
+    check_path(params.candidates)
+}
+
 candidates = file(candidates) // stage file
-
 
 params.devices = "1"
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // should not be changed
