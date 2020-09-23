@@ -269,5 +269,7 @@ workflow {
     //     }
 
     // }
+    fasta = get_single_fasta(params.fasta) | view
     fastq = get_paired_fastq(params.fastq) | view
+
 }
