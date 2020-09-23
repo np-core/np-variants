@@ -188,7 +188,7 @@ def get_single_fasta(glob){
     channel.fromPath(glob, type: 'file') | map { path -> tuple(path.baseName, path) }
 }
 def get_paired_fastq(glob){
-    return channel.fromFilePairs(glob, flat: false)
+    return channel.fromFilePairs(glob, flat: true)
 }
 def get_fast5_dir(dir){
     return channel.fromPath(dir, type: 'dir').map { tuple(it.getName(), it) }
@@ -254,15 +254,13 @@ workflow megalodon_panels {
 }
 
 workflow {
-    if (params.workflow == "core"){
-        println "Core workflow selected."
+    // if (params.workflow == "core"){
 
-        fasta = get_single_fasta(params.fasta) | view
-        // fastq = get_paired_fastq(params.fastq) | view
-        // fasta.mix(fastq) | snippy_core
+    //     fasta = get_single_fasta(params.fasta) | view
+    //     fastq = get_paired_fastq(params.fastq) | view
+    //     fasta.mix(fastq) | snippy_core
     
-    } 
-    // else if (params.workflow == "candidate"){
+    // } else if (params.workflow == "candidate"){
         
     //     if (params.panels){
     //         get_fast5_panels(params.panels) | megalodon_panels
@@ -271,4 +269,5 @@ workflow {
     //     }
 
     // }
+    fastq = get_paired_fastq(params.fastq) | view
 }
