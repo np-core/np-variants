@@ -60,9 +60,14 @@ def check_path(p) {
 params.workflow = "core"
 params.outdir = "$PWD/results"
 
+
 params.reference = "$PWD/ref.fasta"
-check_path(params.reference) // required
-reference = file(params.reference)  // stage the reference
+if (params.reference){
+    check_path(params.reference) // required
+    reference = file(params.reference)  // stage the reference
+} else {
+    reference = ""
+}
 
 // Core (Illumina)
 params.fastq = "*_R{1,2}.fastq"
@@ -80,7 +85,6 @@ if (params.panels){
 }
 
 params.candidates = "" // VCF
-
 if (params.candidates){
     check_path(params.candidates)
     candidates = file(params.candidates) // stage file
@@ -88,11 +92,13 @@ if (params.candidates){
     candidates = "" // define alt variable 
 }
 
-params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // should not be changed
-params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" with "/.../barcoding" models
-params.guppy_devices = "1"
-params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
+params.megalodon_params = ""
+params.gpu_devices = "1"
 params.reads_per_guppy_batch = 50
+
+params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // reachable inside container
+params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" or "/.../barcoding" models
+params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
 
 
 
@@ -111,36 +117,7 @@ def helpMessage() {
 
     A typical command for constructing the reference alignment and core-genome single nucleotide polymorphism calls:
 
-        nextflow run np-core/np-variants --illumina fastq/ --tail "_R{1,2}.fastq.gz"
-
-    Deployment and resource configuration:
-
-        Resources can be configured hierarchically by:
-            
-            1. Selecting a tag or path to image file for Docker or Singularity (`--container`)
-            2. Selecting a configuration file from ${baseDir}/configs (`--config`) 
-            3. Selecting a resource configuration  ${baseDir}/configs (`--resource_config`)
-            4. Selecting a native profile within the configuration file (`-profile`)
-
-        --container             path to container file or docker tag to provision pipeline
-
-                                  <np-core/signal>      Example for tag of Docker image
-                                  <$HOME/phybeast.sif>  Example for path to Singularity image
-
-        --config                select a configuration from the configs subdirectory of the pipeline
-
-                                  <nextflow>  base configuration with docker or singularity profiles
-                                  <jcu>       base configuration for the zodiac cluster at JCU
-                                  <nectar>    base configuration for the nectar cluster at QCIF
-
-        --resource_config       select a resource configuration nested within the selected configuration
-
-                                  <process>   base resource configuration of processes for compute servers
-
-        -profile                select a system executor profile from the config file - default:
-
-                                  <docker> / <gpu_docker>  - expect container to be tag format
-                                  <singularity> / <gpu_singularity> - expect container to be path to image
+        nextflow run np-core/np-variants --workflow core --path "*_R{1,2}.fastq.gz" --reference ref.fasta
 
     Subworkflow selection:
 
