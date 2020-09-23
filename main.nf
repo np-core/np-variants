@@ -65,7 +65,7 @@ if (params.candidates){
     check_path(params.candidates)
 }
 
-candidates = file(candidates) // stage file
+candidates = file(params.candidates) // stage file
 
 params.devices = "1"
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // should not be changed
