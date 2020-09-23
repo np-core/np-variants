@@ -258,16 +258,17 @@ workflow {
         println "Core workflow selected."
 
         fasta = get_single_fasta(params.fasta) | view
-        //fastq = get_paired_fastq(params.fastq) | view
+        // fastq = get_paired_fastq(params.fastq) | view
         // fasta.mix(fastq) | snippy_core
     
-    } else if (params.workflow == "candidate"){
+    } 
+    // else if (params.workflow == "candidate"){
         
-        if (params.panels){
-            get_fast5_panels(params.panels) | megalodon_panels
-        } else {
-            get_fast5_dir(params.path) | megalodon_dir
-        }
+    //     if (params.panels){
+    //         get_fast5_panels(params.panels) | megalodon_panels
+    //     } else {
+    //         get_fast5_dir(params.path) | megalodon_dir
+    //     }
 
-    }
+    // }
 }
