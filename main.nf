@@ -81,7 +81,7 @@ if (params.panels){
     check_path(params.panels)
 }
 
-params.candidates = "" // VCF
+params.candidates = "ref.fasta" // VCF
 if (params.candidates){
     check_path(params.candidates)
     candidates = file(params.candidates) // stage file
