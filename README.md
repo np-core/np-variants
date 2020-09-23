@@ -27,7 +27,7 @@ Usage:
 
 A typical command for computing core genome variant calls from short-read data with Snippy:
 
-    nextflow run np-core/np-variants --workflow core --fastq isolates/
+    nextflow run np-core/np-variants --workflow core --fastq "isolates/*_R{1,2}.fq.gz" --reference ref.fasta
 
 ```
 
@@ -36,10 +36,10 @@ A typical command for computing core genome variant calls from short-read data w
 In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to generate a non-recombinant core-genome alignment for the provided set of isolates (includes output of non-core per-isolate variant calls) from high-quality short-read sequence data:
 
 ```
-nextflow run np-core/np-variants --workflow core --fastq isolates/ --fasta isolate_asemblies/ --variant_sites true
+nextflow run np-core/np-variants --workflow core --fastq "isolates/*_R{1,2}.fq.gz" --reference ref.fasta
 ```
 
-Modules used:
+Modules:
 
 * `Fastp` - quality control of `--fastq` sequence reads 
 * `Snippy` - reference alignment and core variant calls from `--fastq` and `--fasta`
