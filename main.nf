@@ -270,7 +270,7 @@ workflow {
 
     // }
     
-    if (params.fasta){
+    if (params.fastq){
         fastq = get_paired_fastq(params.fastq) | view
     } else {
         fastq = channel.empty()
