@@ -80,6 +80,7 @@ if (params.panels){
 }
 
 params.candidates = "" // VCF
+
 if (params.candidates){
     check_path(params.candidates)
     candidates = file(params.candidates) // stage file
@@ -87,10 +88,9 @@ if (params.candidates){
     candidates = "" // define alt variable 
 }
 
-
-params.devices = "1"
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // should not be changed
 params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" with "/.../barcoding" models
+params.guppy_devices = "1"
 params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
 params.reads_per_guppy_batch = 50
 
@@ -254,34 +254,30 @@ workflow megalodon_panels {
 }
 
 workflow {
-    // if (params.workflow == "core"){
-
-    //     fasta = get_single_fasta(params.fasta) | view
-    //     fastq = get_paired_fastq(params.fastq) | view
-    //     fasta.mix(fastq) | snippy_core
     
-    // } else if (params.workflow == "candidate"){
-        
-    //     if (params.panels){
-    //         get_fast5_panels(params.panels) | megalodon_panels
-    //     } else {
-    //         get_fast5_dir(params.path) | megalodon_dir
-    //     }
+    if (params.workflow == "candidate"){
 
-    // }
-    
-    if (params.fastq){
-        fastq = get_paired_fastq(params.fastq) | snippy_fastq
-    } else {
-        fastq = channel.empty()
-    }    
+        if (params.panels){
+            get_fast5_panels(params.panels) | megalodon_panels
+        } else {
+            get_fast5_dir(params.path) | megalodon_dir
+        }
 
-    if (params.fasta){
-        fasta = get_single_fasta(params.fasta) | snippy_fasta
     } else {
-        fasta = channel.empty()
+        if (params.fastq){
+            fastq = get_paired_fastq(params.fastq) | snippy_fastq
+        } else {
+            fastq = channel.empty()
+        }    
+
+        if (params.fasta){
+            fasta = get_single_fasta(params.fasta) | snippy_fasta
+        } else {
+            fasta = channel.empty()
+        }
+
+        fasta.mix(fastq) | snippy_core
     }
 
-    fasta.mix(fastq) | snippy_core
 
 }
