@@ -41,19 +41,19 @@ nextflow.enable.dsl=2
 params.workflow = "core"
 params.outdir = "$PWD/results"
 
-// Core (Illumina)
-
-params.fastq = "*_R{1,2}.fastq"
-params.fasta = ""
-
 params.reference = "$PWD/ref.fasta"
 check_path(params.reference) // required
 reference = file(params.reference)  // stage the reference
 
+// Core (Illumina)
+params.fastq = "*_R{1,2}.fastq"
+params.fasta = "" // optional
+params.snippy_params = ""
+params.gubbins_params = ""
+
 // Candidates (Megalodon)
 
 params.path = ""
-
 params.panels = ""
 
 if (params.panels){
