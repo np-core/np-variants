@@ -269,7 +269,18 @@ workflow {
     //     }
 
     // }
-    fasta = get_single_fasta(params.fasta) | view
-    fastq = get_paired_fastq(params.fastq) | view
+    
+    if (params.fasta){
+        fastq = get_paired_fastq(params.fastq) | view
+    } else {
+        fastq = channel.empty()
+    }
+    
+
+    if (params.fasta){
+        fasta = get_single_fasta(params.fasta) | view
+    } else {
+        fasta = channel.empty()
+    }
 
 }
