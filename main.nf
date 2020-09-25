@@ -112,9 +112,19 @@ def helpMessage() {
 
     Usage:
 
-    A typical command for constructing the reference alignment and core-genome single nucleotide polymorphism calls:
+    A typical command to construct a core-genome variant alignment from PE Illumina data:
 
         nextflow run np-core/np-variants --workflow core --path "*_R{1,2}.fastq.gz" --reference ref.fasta
+
+    Deployment and resource configuration:
+
+            Resources can be configured hierarchically by first selecting a configuration file from
+            presets with `--config` and a resource presets with `--resource_config`
+
+            Specific process execution profiles defined within the configuration files are selected with
+            the native argument `-profile`
+
+            For more information see: https://github.com/np-core/config 
 
     Subworkflow selection:
 
