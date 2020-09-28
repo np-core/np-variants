@@ -46,7 +46,7 @@ def check_path(p, descr) {
         log.info"""
         No $descr provided (required)
         """
-        exit 1
+        exit 0
     } else {
         path = Paths.get(p)
         if (path.exists()){
@@ -57,7 +57,7 @@ def check_path(p, descr) {
             log.info"""
             Failed to detect input $descr: $p
             """
-            exit 1
+            exit 0
         }
     }    
 }
@@ -84,12 +84,12 @@ params.path = ""
 params.panels = ""
 
 if (params.panels){
-    check_path(params.panels)
+    check_path(params.panels, "panel directory")
 }
 
-params.candidates = "core.vcf" // VCF
+params.candidates = "" // VCF
 if (params.candidates){
-    check_path(params.candidates)
+    check_path(params.candidates, "candidate file")
     candidates = file(params.candidates) // stage file
 } else {
     candidates = "" // define alt variable 
