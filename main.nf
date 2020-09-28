@@ -105,7 +105,7 @@ params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio:
 
 params.caller = "medaka"
 params.medaka_model = "r941_min_high_g360"
-
+params.clair_model = "/clair_models/model"
 
 
 // Workflow version
@@ -202,7 +202,8 @@ include { Gubbins  } from './modules/gubbins'
 include { MegalodonVariants } from './modules/megalodon'
 include { MegalodonVariantsPanels } from './modules/megalodon'
 include { MedakaVariants } from './modules/medaka'
-
+include { Minimap2ONT } from './modules/minimap2'
+include { ClairVariants } from '.modules/clair'
 
 workflow snippy_fastq {
     take:
@@ -278,12 +279,15 @@ workflow {
         fasta.mix(fastq) | snippy_core
     
     } else if (params.workflow == "denovo"){
+        // ONT denovo workflow with Medaka or Clair
+        
+        fastq = get_single_file(params.fastq) 
+        mapped = Minimap2ONT(fastq, reference)
 
         if (params.caller == "medaka"){
-            fastq = get_single_file(params.fastq) 
-            MedakaVariants(fastq, reference)
+            MedakaVariants(mapped)
         } else if (params.caller == "clair"){
-            get_single_file(params.fastq) | view
+            ClairVariants(mapped, reference)
         }
 
     }
