@@ -39,19 +39,19 @@ nextflow.enable.dsl=2
 
 // Helper functions
 
-def check_path(p) {
+def check_path(p, descr) {
     
     path = Paths.get(p)
 
     if (path.exists()){
         log.info"""
-        Detected input path: $p
+        Detected input $descr: $p
         """
     } else {
         log.info"""
-        Failed to detect input path: $p
+        Failed to detect input $descr: $p
         """
-        exit 0
+        exit 1
     }
 }
 
@@ -61,7 +61,7 @@ params.workflow = "core"
 params.outdir = "$PWD/results"
 
 params.reference = "" // FASTA reference genome
-check_path(params.reference) // required
+check_path(params.reference, "reference file") // required
 reference = file(params.reference)  // stage the reference
 
 
@@ -80,7 +80,7 @@ if (params.panels){
     check_path(params.panels)
 }
 
-params.candidates = "ref.fasta" // VCF
+params.candidates = "core.vcf" // VCF
 if (params.candidates){
     check_path(params.candidates)
     candidates = file(params.candidates) // stage file
