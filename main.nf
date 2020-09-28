@@ -240,27 +240,32 @@ workflow megalodon_panels {
 workflow {
     
     if (params.workflow == "candidate"){
-
+        // ONT candidate workflow with Megalodon
         if (params.panels){
             get_fast5_panels(params.panels) | megalodon_panels
         } else {
             get_fast5_dir(params.path) | megalodon_dir
         }
 
-    } else {
+    } else if (params.workflow == "core") {
+        // Illumina core-genome SNP workflow with Snippy and Gubbins
         if (params.fastq){
             fastq = get_paired_fastq(params.fastq) | snippy_fastq
         } else {
             fastq = channel.empty()
         }    
-
         if (params.fasta){
             fasta = get_single_fasta(params.fasta) | snippy_fasta
         } else {
             fasta = channel.empty()
         }
-
+    
         fasta.mix(fastq) | snippy_core
+    
+    } else if (params.workflow == "denovo"){
+
+
+
     }
 
 
