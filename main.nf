@@ -202,7 +202,7 @@ include { Gubbins  } from './modules/gubbins'
 include { MegalodonVariants } from './modules/megalodon'
 include { MegalodonVariantsPanels } from './modules/megalodon'
 include { MedakaVariants } from './modules/medaka'
-include { Minimap2ONT } from './modules/minimap2'
+include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
 
 workflow snippy_fastq {
@@ -280,12 +280,11 @@ workflow {
     
     } else if (params.workflow == "denovo"){
         // ONT denovo workflow with Medaka or Clair
-        
         fastq = get_single_file(params.fastq) 
-        mapped = Minimap2ONT(fastq, reference)
+        mapped = MinimapONT(fastq, reference)
 
         if (params.caller == "medaka"){
-            MedakaVariants(mapped)
+            MedakaVariants(mapped, reference)
         } else if (params.caller == "clair"){
             ClairVariants(mapped, reference)
         }
