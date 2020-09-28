@@ -96,7 +96,7 @@ if (params.candidates){
 }
 
 params.megalodon_params = ""
-params.gpu_devices = "1"
+params.guppy_devices = "1"
 params.reads_per_guppy_batch = 50
 
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // reachable inside container
