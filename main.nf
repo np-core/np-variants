@@ -280,7 +280,8 @@ workflow {
     } else if (params.workflow == "denovo"){
 
         if (params.caller == "medaka"){
-            get_single_file(params.fastq) | MedakaVariants
+            fastq = get_single_file(params.fastq) 
+            MedakaVariants(fastq, reference)
         } else if (params.caller == "clair"){
             get_single_file(params.fastq) | view
         }
