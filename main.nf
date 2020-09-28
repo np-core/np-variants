@@ -41,18 +41,25 @@ nextflow.enable.dsl=2
 
 def check_path(p, descr) {
     
-    path = Paths.get(p)
 
-    if (path.exists()){
+    if (p == ""){
         log.info"""
-        Detected input $descr: $p
-        """
-    } else {
-        log.info"""
-        Failed to detect input $descr: $p
+        No $descr provided (required)
         """
         exit 1
-    }
+    } else {
+        path = Paths.get(p)
+        if (path.exists()){
+            log.info"""
+            Detected input $descr: $p
+            """
+        } else {
+            log.info"""
+            Failed to detect input $descr: $p
+            """
+            exit 1
+        }
+    }    
 }
 
 
