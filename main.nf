@@ -96,7 +96,7 @@ if (params.candidates){
 }
 
 params.megalodon_params = ""
-params.guppy_devices = "1"
+params.guppy_devices = "cuda:0"
 params.reads_per_guppy_batch = 50
 
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // reachable inside container
@@ -203,7 +203,7 @@ include { MegalodonVariants } from './modules/megalodon'
 include { MegalodonVariantsPanels } from './modules/megalodon'
 include { MedakaVariants } from './modules/medaka'
 include { Minimap2ONT } from './modules/minimap2'
-include { ClairVariants } from '.modules/clair'
+include { ClairVariants } from './modules/clair'
 
 workflow snippy_fastq {
     take:
