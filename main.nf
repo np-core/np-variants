@@ -60,7 +60,6 @@ def check_path(p) {
 params.workflow = "core"
 params.outdir = "$PWD/results"
 
-
 params.reference = "" // FASTA reference genome
 check_path(params.reference) // required
 reference = file(params.reference)  // stage the reference
@@ -97,6 +96,9 @@ params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // reacha
 params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" or "/.../barcoding" models
 params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
 
+params.caller = "medaka"
+params.medaka_model = "r941_min_high_g360"
+
 
 
 // Workflow version
@@ -128,17 +130,21 @@ def helpMessage() {
 
     Subworkflow selection:
 
-        --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]
+        --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]        
+        --reference                 reference genome (FASTA) for alignment and variant calling [${params.reference}]
         --outdir                    output directory for results from workflow [${params.outdir}]
 
     Subworkflow - Core Variants:
 
         --fastq | --fasta           glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
-        --reference                 reference genome (FASTA) for alignment and variant calling [${params.reference}]
-
-        --variant_sites             remove monomorphic sites from alignment after Gubbins [${params.variant_sites}]
         --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
         --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
+
+    Subworkflow - DeNovo Variants
+
+        --fastq                     glob to FASTQ files for variant calling with Medaka or Clair ["${params.fastq}"]
+        --caller                    variant caller to use, one of: medaka, clair [${params.caller}]
+        --medaka_model              Medaka model to use for variant calling [${params.medaka_model}]
 
     Subworkflow - Megalodon Haploid Variants:
 
@@ -168,7 +174,7 @@ if (params.help){
 
 // Helper functions
 
-def get_single_fasta(glob){
+def get_single_file(glob){
     channel.fromPath(glob, type: 'file') | map { path -> tuple(path.baseName, path) }
 }
 def get_paired_fastq(glob){
@@ -188,6 +194,8 @@ include { SnippyCore  } from './modules/snippy'
 include { Gubbins  } from './modules/gubbins'
 include { MegalodonVariants } from './modules/megalodon'
 include { MegalodonVariantsPanels } from './modules/megalodon'
+include { MedakaVariants } from './modules/medaka'
+
 
 workflow snippy_fastq {
     take:
@@ -255,7 +263,7 @@ workflow {
             fastq = channel.empty()
         }    
         if (params.fasta){
-            fasta = get_single_fasta(params.fasta) | snippy_fasta
+            fasta = get_single_file(params.fasta) | snippy_fasta
         } else {
             fasta = channel.empty()
         }
@@ -264,7 +272,11 @@ workflow {
     
     } else if (params.workflow == "denovo"){
 
-
+        if (params.caller == "medaka"){
+            get_single_file(params.fastq) | MedakaVariants
+        } else if (params.caller == "clair"){
+            get_single_file(params.fastq) | view
+        }
 
     }
 
