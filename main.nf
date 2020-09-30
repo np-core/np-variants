@@ -118,6 +118,8 @@ if ( params.coverage instanceof String ){
     coverage = params.coverage
 }
 
+println coverage
+
 // Workflow version
 
 version = '0.1.4'
