@@ -103,10 +103,18 @@ params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // reacha
 params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" or "/.../barcoding" models
 params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
 
+// De novo
+
 params.caller = "medaka"
 params.medaka_model = "r941_min_high_g360"
 params.clair_model = "/clair_models/model"
 
+params.coverage = ""
+params.genome_size = "2.8g"
+
+if ( params.coverage instanceof String ){
+    coverage = params.coverage.split(",").collect { file(it) }
+}
 
 // Workflow version
 
@@ -152,6 +160,8 @@ def helpMessage() {
         --fastq                     glob to FASTQ files for variant calling with Medaka or Clair ["${params.fastq}"]
         --caller                    variant caller to use, one of: medaka, clair [${params.caller}]
         --medaka_model              Medaka model to use for variant calling [${params.medaka_model}]
+        --coverage                  Comma delimited string of target coverage to subsample before variant calling [${params.subsample}]
+        --genome_size               Genome size for subsampling in Rasusa [${params.genome_size}]
 
     Subworkflow - Megalodon Haploid Variants:
 
@@ -204,6 +214,7 @@ include { MegalodonVariantsPanels } from './modules/megalodon'
 include { MedakaVariants } from './modules/medaka'
 include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
+include { RasusaMulti } from './modules/rasusa'
 
 workflow snippy_fastq {
     take:
@@ -280,7 +291,12 @@ workflow {
     
     } else if (params.workflow == "denovo"){
         // ONT denovo workflow with Medaka or Clair
-        fastq = get_single_file(params.fastq) 
+        fastq = get_single_file(params.fastq)
+        
+        if (params.coverage){
+            fastq = RasusaMulti(fastq, coverage)
+        }
+
         mapped = MinimapONT(fastq, reference)
 
         if (params.caller == "medaka"){
