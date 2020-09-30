@@ -110,7 +110,7 @@ params.medaka_model = "r941_min_high_g360"
 params.clair_model = "/clair_models/model"
 
 params.coverage = ""
-params.genome_size = "2.8g"
+params.genome_size = "2.8m"
 
 if ( params.coverage instanceof String ){
     coverage = params.coverage.split(",").collect { it }
