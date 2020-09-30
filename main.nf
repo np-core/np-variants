@@ -114,6 +114,8 @@ params.genome_size = "2.8g"
 
 if ( params.coverage instanceof String ){
     coverage = params.coverage.split(",").collect { file(it) }
+} else {
+    coverage = params.coverage
 }
 
 // Workflow version
@@ -292,7 +294,7 @@ workflow {
     } else if (params.workflow == "denovo"){
         // ONT denovo workflow with Medaka or Clair
         fastq = get_single_file(params.fastq)
-        
+
         if (params.coverage){
             fastq = RasusaMulti(fastq, coverage)
         }
