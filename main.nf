@@ -113,7 +113,7 @@ params.coverage = ""
 params.genome_size = "2.8g"
 
 if ( params.coverage instanceof String ){
-    coverage = params.coverage.split(",").collect { file(it) }
+    coverage = params.coverage.split(",").collect { it }
 } else {
     coverage = params.coverage
 }
