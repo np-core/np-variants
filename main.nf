@@ -112,6 +112,11 @@ params.clair_haploid = "--haploid_sensitive"
 params.coverage = ""
 params.genome_size = "2.8m"
 
+// Forest Evaluation
+
+params.snippy_dir = ""
+params.ont_dir = '""'
+
 if ( params.coverage instanceof String ){
     coverage = params.coverage.split(",").collect { it }
 } else {
@@ -179,6 +184,10 @@ def helpMessage() {
         --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
         --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
 
+    Subworkflow - Random Forest SNP Evaluation
+
+        --
+
     =========================================
 
     """.stripIndent()
@@ -205,6 +214,33 @@ def get_fast5_dir(dir){
 def get_fast5_panel(dir){
     return channel.fromPath("${dir}/**/*", type: 'dir').map { tuple(it.getParent().getName(), it.getName(), it) }
 }
+def get_evaluation_batches(snippy_dir, ont_dir){
+
+    snippy_vcf = channel.fromPath("${snippy_dir}/*.vcf").map { tuple(it.simpleName, it) }
+    
+    ont_vcf = channel.fromPath("${ont_dir}/*.vcf").map { tuple(it.simpleName, it) }
+    ont_stats = channel.from("${ont_dir}/*.txt").map { tuple(it.simpleName, it) }
+    
+    ont = ont_vcf.cross(ont_stats).map { crossed ->
+        if (crossed[0][0] == crossed[1][0]){ // if id same
+            return tuple( crossed[0][0], crossed[0][1], crossed[1][1] )  // id, ont_vcf, stats
+        } 
+    }
+
+    println ont
+
+    matches = snippy_vcf.cross(ont).map { crossed ->
+        if (crossed[0][0] == crossed[1][0]){ // if id same
+            return tuple( crossed[0][0], crossed[0][1], crossed[1][1], crossed[1][2] )  // id, snippy_vcf, ont_vcf, stats
+        } 
+    }
+
+    println matches
+
+    return matches
+
+}
+
 
 include { Fastp } from './modules/fastp'
 include { SnippyFastq } from './modules/snippy'
@@ -266,6 +302,24 @@ workflow megalodon_panels {
         MegalodonVariantsPanels.out
 }
 
+workflow denovo_snps {
+    take:
+        fastq // id, fq
+    main:
+        if (params.coverage){
+            fastq = RasusaMulti(fastq, coverage)
+        }
+        mapped = MinimapONT(fastq, reference)
+        if (params.caller == "medaka"){
+            variants = MedakaVariants(mapped, reference)
+        } else if (params.caller == "clair"){
+            variants = ClairVariants(mapped, reference)
+        }
+    emit:
+        variants[0]  // vcf variant files
+        variants[1] // bam alignments
+}
+
 workflow {
     
     if (params.workflow == "candidate"){
@@ -277,7 +331,7 @@ workflow {
         }
 
     } else if (params.workflow == "core") {
-        // Illumina core-genome SNP workflow with Snippy and Gubbins
+        // Illumina core-genome SNP workflow with FASTQ / FASTA --> Snippy, SnippyCore and Gubbins
         if (params.fastq){
             fastq = get_paired_fastq(params.fastq) | snippy_fastq
         } else {
@@ -293,19 +347,10 @@ workflow {
     
     } else if (params.workflow == "denovo"){
         // ONT denovo workflow with Medaka or Clair
-        fastq = get_single_file(params.fastq)
+        get_single_file(params.fastq) | denovo_snps
 
-        if (params.coverage){
-            fastq = RasusaMulti(fastq, coverage)
-        }
-
-        mapped = MinimapONT(fastq, reference)
-
-        if (params.caller == "medaka"){
-            MedakaVariants(mapped, reference)
-        } else if (params.caller == "clair"){
-            ClairVariants(mapped, reference)
-        }
+    } else if (params.workflow == "forest_evaluation"){
+        get_evaluation_batches(params.snippt_dir, params.ont_dir) | view
 
     }
 
