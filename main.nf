@@ -336,7 +336,7 @@ workflow evaluate_forest {
     take:
         eval_batch  // per file: id, snippy_vcf, ont_vcf, ont_stats
     main:
-        EvaluateRandomForest(eval_batch, models) | view
+        EvaluateRandomForest(eval_batch, eval_models) | view
     emit:
         null
 
