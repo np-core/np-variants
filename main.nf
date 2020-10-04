@@ -220,15 +220,10 @@ def get_fast5_panel(dir){
 }
 def get_evaluation_batches(snippy_dir, ont_dir){
 
-    snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
+    snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
     
-    ont_vcf = Channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
-    ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.getName(), it) }
-
-    source = Channel.from( [1, 'alpha'], [2, 'beta'] )
-    target = Channel.from( [1, 'x'], [1, 'y'], [1, 'z'], [2,'p'], [2,'q'], [2,'t'] )
-
-    source.cross(target).view()
+    ont_vcf = Channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
+    ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.baseName, it) }
 
     ont_vcf.cross(snippy_vcf).view()
 
