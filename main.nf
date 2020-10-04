@@ -119,7 +119,16 @@ params.genome_size = "2.8m"
 // Forest Evaluation
 
 params.snippy_dir = ""
-params.ont_dir = '""'
+params.ont_dir = ""
+params.eval_mask_weak = 0.8
+params.eval_models = "$baseDir/random_forest/test_model.composite.sav"
+params.eval_caller = "clair"
+
+if ( params.eval_models instanceof String ){
+    eval_models = params.eval_models.split(",").collect { file(it) }
+} else {
+    eval_models = params.eval_models
+}
 
 if ( params.coverage instanceof String ){
     coverage = params.coverage.split(",").collect { it }
@@ -254,6 +263,8 @@ include { MedakaVariants } from './modules/medaka'
 include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
 include { RasusaMulti } from './modules/rasusa'
+include { EvaluateRandomForest } from './modules/variants'
+
 
 workflow snippy_fastq {
     take:
@@ -321,6 +332,16 @@ workflow denovo_snps {
         variants[1] // bam alignments
 }
 
+workflow evaluate_forest {
+    take:
+        eval_batch  // per file: id, snippy_vcf, ont_vcf, ont_stats
+    main:
+        EvaluateRandomForest(eval_batch, models) | view
+    emit:
+        null
+
+}
+
 workflow {
     
     if (params.workflow == "candidate"){
@@ -351,7 +372,7 @@ workflow {
         get_single_file(params.fastq) | denovo_snps
 
     } else if (params.workflow == "forest_evaluation"){
-        get_evaluation_batches(params.snippy_dir, params.ont_dir) | view
+        get_evaluation_batches(params.snippy_dir, params.ont_dir) | evaluate_forest
 
     }
 
