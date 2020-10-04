@@ -225,13 +225,14 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     ont_vcf = Channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
     ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.baseName, it) }
 
-    ont_vcf.cross(ont_stats).unique().view()
+    ont = ont_vcf.cross(ont_stats).unique().map { crossed ->
+        if (crossed[0][0] == crossed[1][0]){ // if id same
+            return tuple( crossed[0][0], crossed[0][1], crossed[1][1] )  // id, ont_vcf, stats
+        } 
+    }
 
-    // | map { crossed ->
-    //     if (crossed[0][0] == crossed[1][0]){ // if id same
-    //         return tuple( crossed[0][0], crossed[0][1], crossed[1][1] )  // id, ont_vcf, stats
-    //     } 
-    // }
+    ont.view()
+
     // matches = snippy_vcf.cross(ont).map { crossed ->
     //     if (crossed[0][0] == crossed[1][0]){ // if id same
     //         eval_input = tuple( crossed[0][0], crossed[0][1], crossed[1][1], crossed[1][2] ) 
