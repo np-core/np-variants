@@ -227,7 +227,8 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     
     ont_stats | view
 
-    ont_vcf.cross(ont_stats) | view  
+    ont_vcf.cross(ont_stats).view()
+
     // | map { crossed ->
     //     if (crossed[0][0] == crossed[1][0]){ // if id same
     //         return tuple( crossed[0][0], crossed[0][1], crossed[1][1] )  // id, ont_vcf, stats
