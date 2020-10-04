@@ -220,14 +220,14 @@ def get_fast5_panel(dir){
 }
 def get_evaluation_batches(snippy_dir, ont_dir){
 
-    snippy_vcf = channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
+    snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
     
-    ont_vcf = channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
-    ont_stats = channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.getName(), it) }
-    
-    ont_stats | view
+    ont_vcf = Channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
+    ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.getName(), it) }
 
-    ont_vcf.cross(ont_stats).view()
+    ont_vcf | view
+
+    ont_vcf.cross(ont_stats) | view
 
     // | map { crossed ->
     //     if (crossed[0][0] == crossed[1][0]){ // if id same
