@@ -354,7 +354,7 @@ workflow {
         get_single_file(params.fastq) | denovo_snps
 
     } else if (params.workflow == "forest_evaluation"){
-        get_evaluation_batches(params.snippt_dir, params.ont_dir) | view
+        get_evaluation_batches(params.snippy_dir, params.ont_dir) | view
 
     }
 
