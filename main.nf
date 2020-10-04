@@ -225,8 +225,6 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     ont_vcf = Channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.getName(), it) }
     ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.getName(), it) }
 
-    ont_vcf | view
-
     ont_vcf.cross(ont_stats) | view
 
     // | map { crossed ->
