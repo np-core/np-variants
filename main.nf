@@ -225,7 +225,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     ont_vcf = Channel.fromPath("${ont_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
     ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.baseName, it) }
 
-    ont_vcf.cross(snippy_vcf).view()
+    ont_vcf.cross(ont_stats).unique().view()
 
     // | map { crossed ->
     //     if (crossed[0][0] == crossed[1][0]){ // if id same
