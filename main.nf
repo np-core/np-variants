@@ -259,7 +259,7 @@ def get_train_collections(snippy_dir, ont_dir){
     ont_vcf | view
     ont_stats | view
 
-    ont = ont_vcf.cross(ont_stats).map { crossed ->
+    ont = ont_vcf.mix(ont_stats).map { crossed ->
         return crossed
     }
 
