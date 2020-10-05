@@ -255,7 +255,11 @@ def get_train_collections(snippy_dir, ont_dir){
     
     ont_vcf = Channel.fromPath("${ont_dir}/**/*.vcf", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
     ont_stats = Channel.fromPath("${ont_dir}/**/*.txt", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
+    
 
+    snippy_vcf | view
+    ont_vcf | view
+    
     ont = ont_vcf.cross(ont_stats).unique().map { crossed ->
         if (crossed[0][0] == crossed[1][0]){ // id same
             return tuple( crossed[0][0], crossed[0][1], crossed[0][2], crossed[1][2] )  // train_id, id, ont_vcf, stats
