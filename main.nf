@@ -253,12 +253,9 @@ def get_train_collections(snippy_dir, ont_dir){
 
     snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
     
-    ont_vcf = Channel.fromPath("${ont_dir}/**/*.vcf", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
-    ont_stats = Channel.fromPath("${ont_dir}/**/*.txt", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
+    ont = Channel.fromFilePairs("${ont_dir}/**/*.{vcf,txt}", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
     
-    ont = ont_vcf.mix(ont_stats).groupTuple(by: [0,1]).map { data ->
-        return tuple(data[0], data[1], data[2][0], data[2][0])
-    }
+    ont | view
 
     matches = snippy_vcf.cross(ont).map { crossed ->
         if (crossed[0][0] == crossed[1][1]){ // id same
