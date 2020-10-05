@@ -256,7 +256,7 @@ def get_train_collections(snippy_dir, ont_dir){
     ont = Channel.fromFilePairs("${ont_dir}/**/*.{vcf,txt}", type: 'file', flat: true).map { tuple(it[0], it[1].getParent().getName(),  it[1], it[2]) }
     
     matches = snippy_vcf.cross(ont).map { crossed -> 
-        return crossed.flatten()
+        return crossed.flatten().map { tuple( it[0], it[3], it[1] it[5], it[4] ) }
     }
     
     matches | view
