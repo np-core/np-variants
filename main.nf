@@ -263,7 +263,7 @@ include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
 include { RasusaMulti } from './modules/rasusa'
 include { EvaluateRandomForest } from './modules/variants'
-
+include { ProcessRandomForestEvaluations } from './modules/variants'
 
 workflow snippy_fastq {
     take:
@@ -335,7 +335,7 @@ workflow evaluate_forest {
     take:
         eval_batch  // per file: id, snippy_vcf, ont_vcf, ont_stats
     main:
-        EvaluateRandomForest(eval_batch, eval_models) | view
+        EvaluateRandomForest(eval_batch, eval_models) | collect | ProcessRandomForestEvalutions
     emit:
         null
 
