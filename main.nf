@@ -252,7 +252,7 @@ def get_train_data(dir_train){
     ont_model_files  | view
     illumina_validation_files | view
 
-    return ont_model_files.cross(illumina_validation_files)
+    return ont_model_files.cross(illumina_validation_files, 1)
 
 }
 
