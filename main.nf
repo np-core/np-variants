@@ -118,8 +118,8 @@ params.genome_size = "2.8m"
 
 // Forest Evaluation
 
-params.snippy_dir = ""
-params.ont_dir = ""
+params.dir_snippy = ""
+params.dir_ont = ""
 params.eval_mask_weak = 0.8
 params.eval_models = "$baseDir/random_forest/test_model.composite.sav"
 params.eval_caller = "clair"
@@ -371,7 +371,7 @@ workflow {
         get_single_file(params.fastq) | denovo_snps
     } else if (params.workflow == "forest_evaluation"){
         // Random Forest Classifier Evaluation
-        get_evaluation_batches(params.snippy_dir, params.ont_dir) | evaluate_forest
+        get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     }
 
 
