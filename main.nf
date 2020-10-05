@@ -266,9 +266,6 @@ def get_train_collections(snippy_dir, ont_dir){
     }
 
 
-
-    matches | view
-
     return matches.groupTuple()
 
 }
