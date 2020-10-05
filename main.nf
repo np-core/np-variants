@@ -136,6 +136,10 @@ if ( params.coverage instanceof String ){
     coverage = params.coverage
 }
 
+// Trainiing
+
+params.dir_train = ""
+
 // Workflow version
 
 version = '0.1.4'
@@ -240,10 +244,13 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     return matches
 
 }
-def get_train_ont(ont_dir){
+def get_train_data(dir_train){
 
-    return Channel.fromPath("${ont_dir}/**/*.fq", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }.groupTuple(by: 0)
-    
+    ont_model_files = Channel.fromPath("${dir_train}/**/*.fastq", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
+    illumina_validation_files = Channel.fromFilePairs("${dir_train}/**/*_R{1,2}.fastq.gz", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0], it[1], it[2]) }
+
+    return ont_model_files.cross(illumina_validation_files).groupTuple(by: 0)
+
 }
 
 
@@ -396,7 +403,7 @@ workflow {
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
         println "Forest training"
-        get_train_ont(params.dir_ont) | view
+        get_train_data(params.dir_train) | view
     }
 
 
