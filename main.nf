@@ -240,17 +240,9 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     return matches
 
 }
-def get_train_collections(snippy_dir, ont_dir){
+def get_train_ont(ont_dir){
 
-    snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
-    
-    ont = Channel.fromFilePairs("${ont_dir}/**/*.{vcf,txt}", type: 'file', flat: true).map { tuple(it[0], it[1].getParent().getName(), it[1], it[2]) }
-    
-    matches = snippy_vcf.cross(ont).map { crossed -> 
-        return crossed.flatten()
-    }.map { tuple( it[3], it[0], it[1], it[5], it[4] ) }.groupTuple(by: 0)
-    
-    matches | view
+    return Channel.fromPath("${ont_dir}/**/*.fq", type: 'file', flat: true).map { tuple(it.getParent().getName(), it.baseName, it) }.groupTuple(by: 0)
     
 }
 
@@ -266,9 +258,15 @@ include { MedakaVariants } from './modules/medaka'
 include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
 include { RasusaMulti } from './modules/rasusa'
+
+include { TrainRandomForest } from './modules/variants'
+include { RasusaMultiTraining } from './modules/rasusa'
+include { MinimapMultiTraining } from './modules/minimap2'
+include { ClairVariantsTraining } from './modules/clair'
+include { MedakaVariantsTraining } from './modules/medaka'
+
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
-include { TrainRandomForest } from './modules/variants'
 
 workflow snippy_fastq {
     take:
@@ -338,9 +336,18 @@ workflow denovo_snps {
 
 workflow train_forest {
     take:
-        train_data  // per file: train_collection_id, snippy_vcf, ont_vcf, ont_stats
+        ont_train_data  // model_name, isolate_ids, ont_fqs
     main:
-        TrainRandomForest(train_data)
+        fastq_model_cov = RasusaMultiTraining(train_data, train_coverages)
+        mapped_model_cov = MinimapMultiTraining(fastq_model_cov, train_references)
+        if (params.caller == "medaka"){
+            variants_model_cov = MedakaVariantsTraining(mapped_model_cov)
+        } else if (params.caller == "clair"){
+            variants_model_cov = ClairVariantsTraining(mapped_model_cov)
+        }
+        variants_model_cov |  groupTuple  // by model_name
+
+        TrainRandomForest(variants_model_cov)
     emit:
         null
 
@@ -389,7 +396,7 @@ workflow {
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
         println "Forest training"
-        get_train_collections(params.dir_snippy, params.dir_ont)
+        get_train_ont(params.dir_ont) | view
     }
 
 
