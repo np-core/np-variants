@@ -249,6 +249,28 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     return matches
 
 }
+def get_train_collections(snippy_dir, ont_dir){
+
+    snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
+    
+    ont_vcf = Channel.fromPath("${ont_dir}/**/*.vcf", type: 'dir').map { tuple(it.getParent().getName(), it.baseName, it) }
+    ont_stats = Channel.fromPath("${ont_dir}/**/*.txt", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
+
+    ont = ont_vcf.cross(ont_stats).unique().map { crossed ->
+        if (crossed[0][0] == crossed[1][0]){ // id same
+            return tuple( crossed[0][0], crossed[0][1], crossed[0][2], crossed[1][2] )  // train_id, id, ont_vcf, stats
+        } 
+    }
+
+    matches = snippy_vcf.cross(ont).map { crossed ->
+        if (crossed[0][0] == crossed[1][1]){ // id same
+            return tuple( crossed[1][0], crossed[1][1], crossed[0][1], crossed[1][2], crossed[1][3] )   // train_id, id, snippy_vcf, ont_vcf, stats
+        } 
+    }
+
+    return matches.groupTuple()
+
+}
 
 
 include { Fastp } from './modules/fastp'
@@ -264,6 +286,7 @@ include { ClairVariants } from './modules/clair'
 include { RasusaMulti } from './modules/rasusa'
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
+include { TrainRandomForest } from './modules/variants'
 
 workflow snippy_fastq {
     take:
@@ -331,6 +354,16 @@ workflow denovo_snps {
         variants[1] // bam alignments
 }
 
+workflow train_forest {
+    take:
+        train_data  // per file: train_collection_id, snippy_vcf, ont_vcf, ont_stats
+    main:
+        TrainRandomForest(train_data)
+    emit:
+        null
+
+}
+
 workflow evaluate_forest {
     take:
         eval_batch  // per file: id, snippy_vcf, ont_vcf, ont_stats
@@ -372,6 +405,8 @@ workflow {
     } else if (params.workflow == "forest_evaluation"){
         // Random Forest Classifier Evaluation
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
+    } else if (params.workflow == "forest_training"){
+        get_train_collections(params.dir_snippy, params.dir_ont) | view
     }
 
 
