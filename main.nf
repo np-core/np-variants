@@ -259,7 +259,9 @@ def get_train_collections(snippy_dir, ont_dir){
 
     snippy_vcf | view
     ont_vcf | view
-    
+    ont_stats| view
+
+
     ont = ont_vcf.cross(ont_stats).unique().map { crossed ->
         if (crossed[0][0] == crossed[1][0]){ // id same
             return tuple( crossed[0][0], crossed[0][1], crossed[0][2], crossed[1][2] )  // train_id, id, ont_vcf, stats
@@ -410,6 +412,7 @@ workflow {
         // Random Forest Classifier Evaluation
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
+        println "Forest training"
         get_train_collections(params.dir_snippy, params.dir_ont) | view
     }
 
