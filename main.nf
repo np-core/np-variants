@@ -242,7 +242,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
 }
 def get_train_ont(ont_dir){
 
-    return Channel.fromPath("${ont_dir}/**/*.fq", type: 'file', flat: true).map { tuple(it.getParent().getName(), it.baseName, it) }.groupTuple(by: 0)
+    return Channel.fromPath("${ont_dir}/**/*.fq", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }.groupTuple(by: 0)
     
 }
 
