@@ -232,12 +232,10 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     snippy_vcf = Channel.fromPath("${snippy_dir}/*.vcf", type: 'file').map { tuple(it.baseName, it) }
     
     ont = Channel.fromFilePairs("${ont_dir}/**/*.{vcf,txt}", type: 'file', flat: true)
-
-    matches = snippy_vcf.cross(ont).map { crossed ->
-        if (crossed[0][0] == crossed[1][0]){ // id same
-            return tuple( crossed[0][0], crossed[0][1], crossed[1][1], crossed[1][2] )   // id, snippy_vcf, ont_vcf, stats
-        } 
-    }
+    
+    matches = snippy_vcf.cross(ont).map { crossed -> 
+        return crossed.flatten()
+    }.map { tuple( it[0], it[1], it[4], it[3] ) }
 
     return matches
 
@@ -250,7 +248,7 @@ def get_train_collections(snippy_dir, ont_dir){
     
     matches = snippy_vcf.cross(ont).map { crossed -> 
         return crossed.flatten()
-    }.map { tuple( it[0], it[3], it[1], it[5], it[4] ) }
+    }.map { tuple( it[0], it[3], it[1], it[5], it[4] ) }.groupTuple(by: 1)
     
     matches | view
     
