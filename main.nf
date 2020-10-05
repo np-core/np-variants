@@ -248,8 +248,8 @@ def get_train_data(dir_train){
 
     ont_model_files = Channel.fromPath("${dir_train}/**/*.fastq", type: 'file').map { tuple(it.getParent().getName(), it.baseName, it) }
     illumina_validation_files = Channel.fromFilePairs("${dir_train}/**/*_R{1,2}.fastq.gz", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0], it[1], it[2]) }
-
-    return ont_model_files.cross(illumina_validation_files).groupTuple(by: 0)
+    
+    return ont_model_files.cross(illumina_validation_files)
 
 }
 
