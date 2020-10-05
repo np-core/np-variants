@@ -248,7 +248,7 @@ def get_train_collections(snippy_dir, ont_dir){
     
     matches = snippy_vcf.cross(ont).map { crossed -> 
         return crossed.flatten()
-    }.map { tuple( it[0], it[3], it[1], it[5], it[4] ) }.groupTuple(by: 1)
+    }.map { tuple( it[3], it[0], it[1], it[5], it[4] ) }.groupTuple(by: 0)
     
     matches | view
     
