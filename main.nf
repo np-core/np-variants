@@ -235,19 +235,18 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     ont_stats = Channel.fromPath("${ont_dir}/*.txt", type: 'file').map { tuple(it.baseName, it) }
 
     ont = ont_vcf.cross(ont_stats).unique().map { crossed ->
-        if (crossed[0][0] == crossed[1][0]){ // if id same
+        if (crossed[0][0] == crossed[1][0]){ // id same
             return tuple( crossed[0][0], crossed[0][1], crossed[1][1] )  // id, ont_vcf, stats
         } 
     }
 
     matches = snippy_vcf.cross(ont).map { crossed ->
-        if (crossed[0][0] == crossed[1][0]){ // if id same
+        if (crossed[0][0] == crossed[1][0]){ // id same
             return tuple( crossed[0][0], crossed[0][1], crossed[1][1], crossed[1][2] )   // id, snippy_vcf, ont_vcf, stats
         } 
     }
 
     return matches
-
 
 }
 
@@ -370,10 +369,9 @@ workflow {
     } else if (params.workflow == "denovo"){
         // ONT denovo workflow with Medaka or Clair
         get_single_file(params.fastq) | denovo_snps
-
     } else if (params.workflow == "forest_evaluation"){
+        // Random Forest Classifier Evaluation
         get_evaluation_batches(params.snippy_dir, params.ont_dir) | evaluate_forest
-
     }
 
 
