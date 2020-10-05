@@ -257,11 +257,15 @@ def get_train_collections(snippy_dir, ont_dir){
     
     ont | view
 
+    snippy_vcf | view
+
     matches = snippy_vcf.cross(ont).map { crossed ->
         if (crossed[0][0] == crossed[1][1]){ // id same
             return tuple( crossed[1][0], crossed[1][1], crossed[0][1], crossed[1][3], crossed[1][2] )   // train_id, id, snippy_vcf, ont_vcf, stats
         } 
     }
+
+
 
     matches | view
 
