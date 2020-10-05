@@ -259,8 +259,8 @@ def get_train_collections(snippy_dir, ont_dir){
     ont_vcf | view
     ont_stats | view
 
-    ont = ont_vcf.mix(ont_stats).groupTuple(by: [0,1]).flatten().toList().map { crossed ->
-        return crossed
+    ont = ont_vcf.mix(ont_stats).groupTuple(by: [0,1]).map { data ->
+        return tuple(data[0], data[1], data[2][0], data[2][0])
     }
 
     ont | view
