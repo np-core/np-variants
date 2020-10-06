@@ -246,7 +246,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
 }
 def get_train_data(dir_train){
 
-    return channel.fromFilePairs("${dir_train}/**/*.{vcf,fq}", type: 'file', flat: true)
+    return channel.fromFilePairs("${dir_train}/**/*.{vcf,fastq}", type: 'file', flat: true)
 
 }
 
