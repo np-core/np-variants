@@ -136,9 +136,10 @@ if ( params.coverage instanceof String ){
     coverage = params.coverage
 }
 
-// Trainiing
+// Training
 
 params.dir_train = ""
+params.test_size = 0.3
 
 train_coverages = [2, 5, 10, 30, 50, 100]
 train_references = [file("$PWD/jkd.fasta")]
@@ -352,7 +353,7 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairVariantsTraining(mapped_model_cov)
         }
-        variants_model_cov |  groupTuple | view // | TrainRandomForest // by model_name        
+        variants_model_cov |  groupTuple | TrainRandomForest   // by model_name        
     emit:
         null
 
