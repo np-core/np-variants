@@ -246,13 +246,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
 }
 def get_train_data(dir_train){
 
-    ont_model_files = Channel.fromPath("${dir_train}/**/*.fastq", type: 'file').map { tuple(it.baseName, it.getParent().getName(), it) }
-    illumina_validation_files = Channel.fromFilePairs("${dir_train}/**/*_R{1,2}.fastq.gz", type: 'file', flat: true).map { tuple(it[0], it[1].getParent().getName(), it[1], it[2]) }
-    
-    ont_model_files  | view
-    illumina_validation_files | view
-
-    return ont_model_files.cross(illumina_validation_files) { it -> tuple(it[0], it[1]) }
+    return channel.fromFilePairs("${dir_train}/**/*.{vcf,fq}", type: 'file', flat: true)
 
 }
 
