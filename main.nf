@@ -340,7 +340,7 @@ workflow denovo_snps {
 
 workflow train_forest {
     take:
-        ont_train_data  // model_name, isolate_ids, ont_fqs
+        train_data  // model_name, isolate_id, ont_fq, illumina_vcf
     main:
         fastq_model_cov = RasusaMultiTraining(train_data, train_coverages)
         mapped_model_cov = MinimapMultiTraining(fastq_model_cov, train_references)
