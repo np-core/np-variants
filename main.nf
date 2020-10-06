@@ -398,7 +398,7 @@ workflow {
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
         println "Forest training"
-        get_train_data(params.dir_train) | view
+        get_train_data(params.dir_train) | train_forest
     }
 
 
