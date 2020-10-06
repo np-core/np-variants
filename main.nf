@@ -353,7 +353,7 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairVariantsTraining(mapped_model_cov)
         }
-        variants_model_cov | groupTuple | map { tuple(it[0], it[1], it[2] ) } | TrainRandomForest   // by model_name        
+        variants_model_cov | groupTuple | view | TrainRandomForest   // by model_name        
     emit:
         null
 
