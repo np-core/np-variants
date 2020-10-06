@@ -140,6 +140,9 @@ if ( params.coverage instanceof String ){
 
 params.dir_train = ""
 
+train_coverages = [2, 5, 10, 30, 50, 100]
+train_references = [file("$PWD/jkd.fasta")]
+
 // Workflow version
 
 version = '0.1.4'
