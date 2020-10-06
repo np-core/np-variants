@@ -109,7 +109,7 @@ params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio:
 
 // De novo
 
-params.caller = "medaka"
+params.caller = "clair"
 params.medaka_model = "r941_min_high_g360"
 params.clair_model = "/clair_models/model"
 params.clair_haploid = "--haploid_sensitive"
