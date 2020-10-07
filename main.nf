@@ -243,7 +243,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     
     ont | view
 
-    return matches
+    return ont
 
 }
 def get_train_data(dir_train){
