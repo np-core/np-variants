@@ -240,10 +240,12 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     ont = Channel.fromFilePairs("${ont_dir}/*.{vcf,txt}", flat: true, type: 'file')
     
     snippy = Channel.fromPath("${snippy_dir}/*.ref.vcf").map { tuple(it.simpleName, it) }
-        
-    ont.join(snippy) | view
+    
+    snippy | view
 
-    return ont
+    data = ont.join(snippy) | view
+
+    return data
 
 }
 def get_train_data(dir_train){
