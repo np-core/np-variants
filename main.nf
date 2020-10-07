@@ -121,7 +121,7 @@ params.genome_size = "2.8m"
 params.dir_snippy = ""
 params.dir_ont = ""
 params.eval_mask_weak = 0.8
-params.eval_models = "$baseDir/random_forest/test_model.composite.sav"
+params.eval_models = ""
 params.eval_caller = "clair"
 
 if ( params.eval_models instanceof String ){
