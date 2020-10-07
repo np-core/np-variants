@@ -125,7 +125,7 @@ params.eval_models = ""
 params.eval_caller = "clair"
 
 if ( params.eval_models instanceof String ){
-    eval_models = params.eval_models.split(",").collect { file(it) }
+    eval_models = params.eval_models.split(",").collect { "" ? file(it) : null }
 } else {
     eval_models = params.eval_models
 }
