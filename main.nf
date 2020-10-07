@@ -241,7 +241,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     
     ont = Channel.fromFilePairs("${ont_dir}/**/*.{vcf,txt}", type: 'file', flat: true)
     
-    ont.mix(snippy) | groupTuple | view
+    ont.cross(snippy) | view
 
     return ont
 
