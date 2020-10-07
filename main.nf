@@ -124,8 +124,8 @@ params.eval_mask_weak = 0.8
 params.eval_models = ""
 params.eval_caller = "clair"
 
-if ( params.eval_models instanceof String ){
-    eval_models = params.eval_models.split(",").collect { "" ? file(it) : null }
+if ( params.eval_models && params.eval_models instanceof String ){
+    eval_models = params.eval_models.split(",").collect { file(it) }
 } else {
     eval_models = params.eval_models
 }
