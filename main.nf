@@ -239,7 +239,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
 
     ont = Channel.fromPath(["${snippy_dir}/*.ref.vcf", "${ont_dir}/*.vcf", "${ont_dir}/*.txt"], type: 'file').map { tuple(it.simpleName, it) }
         
-    ont | view 
+    ont | groupTuple | view
 
     return ont
 
