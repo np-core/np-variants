@@ -140,9 +140,15 @@ if ( params.coverage instanceof String ){
 
 params.dir_train = ""
 params.test_size = 0.3
+params.train_references = ""
 
 train_coverages = [2, 5, 10, 30, 50, 100]
-train_references = [file("$PWD/jkd.fasta")]
+
+if ( params.train_references && params.train_references instanceof String ){
+    train_references = params.train_references.split(",").collect { file(it) }
+} else {
+    train_references = params.train_references
+}
 
 // Workflow version
 
