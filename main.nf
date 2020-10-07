@@ -241,7 +241,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     
     ont = Channel.fromFilePairs("${ont_dir}/**/*.{vcf,txt}", type: 'file', flat: true)
     
-    data = ont.cross(snippy) | view | map { tuple(it[0][0], it[1][1, ]it[0][2], it[0][1])} // id, snippy, ont, ont
+    data = ont.cross(snippy) | view | map { tuple(it[0][0], it[1][1], it[0][2], it[0][1])} // id, snippy, ont, ont
 
     return data
 
