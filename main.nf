@@ -241,9 +241,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     
     snippy = Channel.fromPath("${snippy_dir}/*.ref.vcf").map { tuple(it.simpleName, it) }
     
-    snippy | view
-
-    data = ont.join(snippy) | view
+    data = ont.join(snippy) | map { tuple(it[0], it[3], it[2], it[1]) }
 
     return data
 
