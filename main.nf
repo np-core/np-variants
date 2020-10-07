@@ -237,9 +237,11 @@ def get_fast5_panel(dir){
 }
 def get_evaluation_batches(snippy_dir, ont_dir){
 
-    ont = Channel.fromPath(["${snippy_dir}/*.ref.vcf", "${ont_dir}/*.vcf", "${ont_dir}/*.txt"], type: 'file').map { tuple(it.simpleName, it) }
+    ont = Channel.fromFilePairs("${ont_dir}/*.{vcf,txt}", flat: true, type: 'file')
+    
+    snippy = Channel.fromPath("${snippy_dir}/*.ref.vcf").map { tuple(it.simpleName, it) }
         
-    ont | groupTuple | view
+    ont.join(snippy) | view
 
     return ont
 
