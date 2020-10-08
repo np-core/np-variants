@@ -140,14 +140,15 @@ if ( params.coverage instanceof String ){
 
 params.dir_train = ""
 params.test_size = 0.3
-params.train_references = ""
+// There only ever is one associated with the Snippy VCF truth calls
+params.train_reference = ""
 
 train_coverages = [2, 5, 10, 30, 50, 100]
 
-if ( params.train_references && params.train_references instanceof String ){
-    train_references = params.train_references.split(",").collect { file(it) }
+if ( params.train_reference && params.train_references instanceof String ){
+    train_references = [file(params.train_references)]
 } else {
-    train_references = params.train_references
+    train_references = []
 }
 
 // Workflow version
@@ -370,20 +371,34 @@ workflow evaluate_forest {
         EvaluateRandomForest(eval_batch, eval_models) | collect | ProcessRandomForestEvaluations
     emit:
         null
+}
+
+workflow train_evaluate_forest {
+
+    take:
+        basecalls
+    main:
+        snippy_ref = SnippyFastqMulti(Fastp(reads), train_references)  // generate reference illumina variant calls
+        create_training_collections(reads, snippy_ref) | 
+
+    emit:
+        null
 
 }
 
 workflow {
     
     if (params.workflow == "candidate"){
-        // ONT candidate workflow with Megalodon
+        
         if (params.panels){
+            println "Calling Megalodon candidate SNPs ($params.caller) on multiplex Fast5 panel input directory: $params.panels"
             get_fast5_panels(params.panels) | megalodon_panels
         } else {
+            println "Calling Megalodon candidate SNPs ($params.caller) on Fast5 input directory: $params.panels"
             get_fast5_dir(params.path) | megalodon_dir
         }
 
-    } else if (params.workflow == "core") {
+    } else if (params.workflow == "snippy" | params.workflow == "snippy-core") {
         // Illumina core-genome SNP workflow with FASTQ / FASTA --> Snippy, SnippyCore and Gubbins
         if (params.fastq){
             fastq = get_paired_fastq(params.fastq) | snippy_fastq
@@ -395,17 +410,22 @@ workflow {
         } else {
             fasta = channel.empty()
         }
-    
-        fasta.mix(fastq) | snippy_core
+
+        snippy = fasta.mix(fastq)
+        
+        if (params.workflow == "snippy-core"){
+            snippy | snippy_core
+        }
     
     } else if (params.workflow == "denovo"){
-        // ONT denovo workflow with Medaka or Clair
+        println "Calling de novo SNPs ($params.caller) on FASTQ input: $params.fastq"
         get_single_file(params.fastq) | denovo_snps
     } else if (params.workflow == "forest_evaluation"){
-        // Random Forest Classifier Evaluation
+        println "Forest evaluation parsed reference variant calls in directory: $params.dir_snippy"
+        println "Forest evaluation parsed ONT variant calls in directory: $params.dir_ont"
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
-        println "Forest training"
+        println "Forest training initiated on directory: $params.dir_train"
         get_train_data(params.dir_train) | train_forest
     }
 
