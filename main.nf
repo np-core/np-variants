@@ -379,8 +379,7 @@ workflow train_evaluate_forest {
         basecalls
     main:
         snippy_ref = SnippyFastqMulti(Fastp(reads), train_references)  // generate reference illumina variant calls
-        create_training_collections(reads, snippy_ref) | 
-
+        create_training_collections(reads, snippy_ref)
     emit:
         null
 
@@ -425,7 +424,7 @@ workflow {
         println "Forest evaluation parsed ONT variant calls in directory: $params.dir_ont"
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
-        println "Forest training initiated on directory: $params.dir_train"
+        println "Forest training using collections in directory: $params.dir_train"
         get_train_data(params.dir_train) | train_forest
     }
 
