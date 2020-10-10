@@ -255,7 +255,7 @@ def get_evaluation_batches(snippy_dir, ont_dir){
 }
 def get_train_data(dir_train){
 
-    return channel.fromFilePairs("${dir_train}/**/*.{vcf,fastq}", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fq, refvcf
+    return channel.fromFilePairs("${dir_train}/**/*.{.ref.vcf,fastq}", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fq, refvcf
 
 }
 
