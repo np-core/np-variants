@@ -352,7 +352,7 @@ workflow train_forest {
         train_data  // model_name, isolate_id, ont_fq, illumina_vcf
     main:
         fastq_model_cov = RasusaMultiTraining(train_data, train_coverages)
-        mapped_model_cov = MinimapMultiTraining(fastq_model_cov, train_reference)
+        mapped_model_cov = MinimapMultiTraining(fastq_model_cov, train_references)
         if (params.caller == "medaka"){
             variants_model_cov = MedakaVariantsTraining(mapped_model_cov)
         } else if (params.caller == "clair"){
@@ -378,7 +378,7 @@ workflow train_evaluate_forest {
     take:
         basecalls
     main:
-        snippy_ref = SnippyFastqMulti(Fastp(reads), train_reference)  // generate reference illumina variant calls
+        snippy_ref = SnippyFastqMulti(Fastp(reads), train_references)  // generate reference illumina variant calls
         create_training_collections(reads, snippy_ref)
     emit:
         null
