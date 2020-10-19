@@ -63,4 +63,43 @@ Modules used:
 
 ## *De novo* Variants (ONT)
 
-*De novo* variant calling from nanopore seqeunce data and assessment against reference `VCF`.
+*De novo* variant calling from nanopore sequence data and variant polishing
+
+**under construction*
+
+Variant polishers trained with `Nextflow` sub-workflow: `forest_training` and `snippy`
+
+Basecall isolates with the same model (HAC methylation recommended) and call reference variants against the training reference genome with Snippy.
+
+```
+nextflow run np-core/np-signal --config jcu -profile tesla --caller guppy --fast5 fast5/ --candidates core.vcf
+```
+
+Create a directory holding one or more training directories (collections) with basecalled training isolates (`.fastq`) and corresponding reference variant (`.ref.vcf`), for example:
+
+```
+dar.fasta                  <-- param: --train_reference
+train/                     <-- param: --dir_train
+   saureus_mix/            <-- collection 1
+      isolate1.fastq
+      isolate1.ref.vcf
+      isolate2.fastq
+      isolate2.ref.vcf
+   saureus_fnq/            <-- collection 2
+      isolate3.fastq
+      isolate3.ref.vcf
+      isolate4.fastq
+      isolate4.ref.vcf
+```
+
+Execute the training pipeline on the directory containing one or multiple training directories, for example:
+
+```
+nextflow run np-core/np-variants -profile docker --workflow forest_training --dir_train train/ --outdir dar_forest/ --train_reference dar.fasta
+```
+
+
+Modules used:
+
+* `Clair` - haploid variant calling on human-trained models (default)
+* `Medaka` - haploid variant calling on mixed-trained models (default)
