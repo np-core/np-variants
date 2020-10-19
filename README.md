@@ -65,7 +65,7 @@ Modules used:
 
 *De novo* variant calling from nanopore sequence data and variant polishing
 
-**under construction*
+**under construction**
 
 Variant polishers trained with `Nextflow` sub-workflow: `forest_training` and `snippy`
 
