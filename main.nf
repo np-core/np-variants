@@ -41,7 +41,6 @@ nextflow.enable.dsl=2
 
 def check_path(p, descr) {
     
-
     if (p == ""){
         log.info"""
         No $descr provided (required)
@@ -212,9 +211,11 @@ def helpMessage() {
         --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
         --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
 
-    Subworkflow - Random Forest SNP Evaluation
+    Subworkflow - SNP Polisher Training
 
         --
+    
+    Subworkflow - SNP Polisher Evaluation
 
     =========================================
 
