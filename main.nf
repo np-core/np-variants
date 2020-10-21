@@ -203,10 +203,6 @@ def helpMessage() {
         --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
         --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
 
-    Candidate Clair:
-
-        --
-
     Candidate Megalodon:
 
         Model configuration files for Guppy can be found inside the container at: /guppy_models
@@ -302,8 +298,6 @@ include { RasusaMultiTraining } from './modules/rasusa'
 include { MinimapMultiTraining } from './modules/minimap2'
 include { ClairVariantsTraining } from './modules/clair'
 include { MedakaVariantsTraining } from './modules/medaka'
-include { ClairCandidates } from './modules/clair'
-
 
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
@@ -374,17 +368,6 @@ workflow denovo_snps {
         variants[1] // bam alignments
 }
 
-workflow clair_candidates {
-    take:
-        fastq // id, fq
-    main:
-        mapped = MinimapONT(fastq, reference)
-        variants = ClairCandidates(mapped, reference, candidates)
-    emit:
-        variants[0]  // vcf variant files
-        variants[1] // bam alignments
-}
-
 workflow train_forest {
     take:
         train_data  // model_name, isolate_id, ont_fq, illumina_vcf
@@ -433,9 +416,6 @@ workflow {
             println "Calling Megalodon candidate SNPs ($params.caller) on Fast5 input directory: $params.panels"
             get_fast5_dir(params.fast5) | megalodon_dir
         }
-    } else if (params.workflow == "candidate_clair"){
-        
-        get_single_file(params.fastq) | clair_candidates
 
     } else if (params.workflow == "snippy" | params.workflow == "snippy-core") {
         println "Calling SNPs using Snippy on input: $params.fastq (fastq) / $params.fasta (fasta)"
