@@ -378,7 +378,7 @@ workflow clair_candidates {
     main:
         mapped = MinimapONT(fastq, reference)
         variants = ClairVariants(mapped, reference, candidates)
-    out:
+    emit:
         variants[0]  // vcf variant files
         variants[1] // bam alignments
 }
