@@ -302,6 +302,8 @@ include { RasusaMultiTraining } from './modules/rasusa'
 include { MinimapMultiTraining } from './modules/minimap2'
 include { ClairVariantsTraining } from './modules/clair'
 include { MedakaVariantsTraining } from './modules/medaka'
+include { ClairCandidates } from './modules/clair'
+
 
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
@@ -377,7 +379,7 @@ workflow clair_candidates {
         fastq // id, fq
     main:
         mapped = MinimapONT(fastq, reference)
-        variants = ClairVariants(mapped, reference, candidates)
+        variants = ClairCandidates(mapped, reference, candidates)
     emit:
         variants[0]  // vcf variant files
         variants[1] // bam alignments
