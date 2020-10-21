@@ -76,6 +76,7 @@ if (params.reference){
 
 
 // Core (Illumina)
+
 params.fastq = "*_R{1,2}.fastq"
 params.fasta = "" // optional
 params.snippy_params = ""
@@ -83,7 +84,7 @@ params.gubbins_params = ""
 
 // Candidates (Megalodon)
 
-params.path = ""
+params.fast5 = ""
 params.panels = ""
 
 if (params.panels){
@@ -103,7 +104,7 @@ params.guppy_devices = "cuda:0"
 params.reads_per_guppy_batch = 50
 
 params.guppy_server_path = "/opt/ont/guppy/bin/guppy_basecall_server"  // reachable inside container
-params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/" or "/.../barcoding" models
+params.guppy_params = "-d /guppy_models" // should always include "-d /guppy_models" or "-d /rerio_models/"
 params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio: res_dna_r941_min_modbases-all-context_v001.cfg
 
 // De novo
@@ -135,11 +136,14 @@ if ( params.coverage instanceof String ){
     coverage = params.coverage
 }
 
-// Training
+// Forest Training
 
 params.dir_train = ""
 params.test_size = 0.3
-// There only ever is one associated with the Snippy VCF truth calls
+
+// There only ever is one training reference that
+// must match reference used in Snippy 
+
 params.train_reference = ""
 
 train_coverages = [2, 5, 10, 30, 50, 100]
@@ -177,31 +181,37 @@ def helpMessage() {
 
             For more information see: https://github.com/np-core/config 
 
-    Subworkflow selection:
+    Available subworkflows:
+
+        - snippy | snippy-core     call variants from Illumina PE with Snippy / core genome alignment with Snippy-Core
+        - candidate_megalodon
+        - candidate_clair
+        - denovo
+        - forest_training
+        - forest_evaluation
+        - forest_polish
+
+    Required configuration:
 
         --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]        
         --reference                 reference genome (FASTA) for alignment and variant calling [${params.reference}]
         --outdir                    output directory for results from workflow [${params.outdir}]
 
-    Subworkflow - Core Variants:
+    Snippy / Snippy-Core:
 
         --fastq | --fasta           glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
         --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
         --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
 
-    Subworkflow - DeNovo Variants
+    Candidate Clair:
 
-        --fastq                     glob to FASTQ files for variant calling with Medaka or Clair ["${params.fastq}"]
-        --caller                    variant caller to use, one of: medaka, clair [${params.caller}]
-        --medaka_model              Medaka model to use for variant calling [${params.medaka_model}]
-        --coverage                  Comma delimited string of target coverage to subsample before variant calling [${params.subsample}]
-        --genome_size               Genome size for subsampling in Rasusa [${params.genome_size}]
+        --
 
-    Subworkflow - Megalodon Haploid Variants:
+    Candidate Megalodon:
 
         Model configuration files for Guppy can be found inside the container at: /guppy_models
 
-        --path                      directory or glob of directories containing Fast5 files for a single sample [${params.path}]
+        --fast5                     directory or glob of directories containing Fast5 files for a single sample [${params.path}]
         --panels                    path to nested panel directories, which contain barcode subdirectories (e.g. fast5/panel1/barcode01) [$params.panels]
         --candidates                VCF candidate variant file to select variants to call with Megalodon [${params.candidates}]
 
@@ -211,11 +221,25 @@ def helpMessage() {
         --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
         --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
 
-    Subworkflow - SNP Polisher Training
+    DeNovo Variants
+
+        --fastq                     glob to FASTQ files for variant calling with Medaka or Clair ["${params.fastq}"]
+        --caller                    variant caller to use, one of: medaka, clair [${params.caller}]
+        --medaka_model              Medaka model to use for variant calling [${params.medaka_model}]
+        --coverage                  Comma delimited string of target coverage to subsample before variant calling [${params.subsample}]
+        --genome_size               Genome size for subsampling in Rasusa [${params.genome_size}]
+
+    SNP Polisher: Random Forest Training
 
         --
     
-    Subworkflow - SNP Polisher Evaluation
+    SNP Polisher: Random Forest Evaluation
+
+        --
+
+    SNP Polisher: Random Forest Polishing
+
+        --
 
     =========================================
 
@@ -348,6 +372,17 @@ workflow denovo_snps {
         variants[1] // bam alignments
 }
 
+workflow clair_candidates {
+    take:
+        fastq // id, fq
+    main:
+        mapped = MinimapONT(fastq, reference)
+        variants = ClairVariants(mapped, reference, candidates)
+    out:
+        variants[0]  // vcf variant files
+        variants[1] // bam alignments
+}
+
 workflow train_forest {
     take:
         train_data  // model_name, isolate_id, ont_fq, illumina_vcf
@@ -388,18 +423,20 @@ workflow train_evaluate_forest {
 
 workflow {
     
-    if (params.workflow == "candidate"){
-        
+    if (params.workflow == "candidate_megalodon"){
         if (params.panels){
             println "Calling Megalodon candidate SNPs ($params.caller) on multiplex Fast5 panel input directory: $params.panels"
             get_fast5_panels(params.panels) | megalodon_panels
         } else {
             println "Calling Megalodon candidate SNPs ($params.caller) on Fast5 input directory: $params.panels"
-            get_fast5_dir(params.path) | megalodon_dir
+            get_fast5_dir(params.fast5) | megalodon_dir
         }
+    } else if (params.workflow == "candidate_clair"){
+        
+        get_single_file(params.fastq) | clair_candidates
 
     } else if (params.workflow == "snippy" | params.workflow == "snippy-core") {
-        // Illumina core-genome SNP workflow with FASTQ / FASTA --> Snippy, SnippyCore and Gubbins
+        println "Calling SNPs using Snippy on input: $params.fastq (fastq) / $params.fasta (fasta)"
         if (params.fastq){
             fastq = get_paired_fastq(params.fastq) | snippy_fastq
         } else {
@@ -414,6 +451,7 @@ workflow {
         snippy = fasta.mix(fastq)
         
         if (params.workflow == "snippy-core"){
+            println "Calling core SNPs using SnippyCore and Gubbins"
             snippy | snippy_core
         }
     
