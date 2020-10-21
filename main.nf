@@ -264,7 +264,7 @@ def get_paired_fastq(glob){
 def get_fast5_dir(dir){
     return channel.fromPath(dir, type: 'dir').map { tuple(it.getName(), it) }
 }
-def get_fast5_panel(dir){
+def get_fast5_panels(dir){
     return channel.fromPath("${dir}/**/*", type: 'dir').map { tuple(it.getParent().getName(), it.getName(), it) }
 }
 def get_evaluation_batches(snippy_dir, ont_dir){
