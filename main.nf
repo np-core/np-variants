@@ -136,24 +136,6 @@ if ( params.coverage instanceof String ){
     coverage = params.coverage
 }
 
-// Forest Training
-
-params.dir_train = ""
-params.test_size = 0.3
-
-// There only ever is one training reference that
-// must match reference used in Snippy 
-
-params.train_reference = ""
-
-train_coverages = [2, 5, 10, 30, 50, 100]
-
-if ( params.train_reference && params.train_reference instanceof String ){
-    train_references = [file(params.train_reference)]
-} else {
-    train_references = []
-}
-
 // Workflow version
 
 version = '0.1.4'
@@ -362,22 +344,6 @@ workflow denovo_snps {
         variants[1] // bam alignments
 }
 
-workflow train_forest {
-    take:
-        train_data  // model_name, isolate_id, ont_fq, illumina_vcf
-    main:
-        fastq_model_cov = RasusaMultiTraining(train_data, train_coverages)
-        mapped_model_cov = MinimapMultiTraining(fastq_model_cov, train_references)
-        if (params.caller == "medaka"){
-            variants_model_cov = MedakaVariantsTraining(mapped_model_cov)
-        } else if (params.caller == "clair"){
-            variants_model_cov = ClairVariantsTraining(mapped_model_cov)
-        }
-        variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference        
-    emit:
-        null
-
-}
 
 workflow evaluate_forest {
     take:
@@ -393,15 +359,45 @@ include { TrainingReferenceSnippy } from './modules/snippy'
 params.training_set_illumina_glob = "*_R{1,2}.fastq.gz"
 params.training_set_ont_glob = "*.fastq"
 
-def get_train_data(dir_train){
+params.train_dir = ""
+params.test_size = 0.3
 
-    illumina = channel.fromFilePairs("${dir_train}/**/${params.training_set_illumina_glob}", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fw, rev
-    ont = channel.fromPath("${dir_train}/**/${params.training_set_ont_glob}", type: 'file').map { tuple(it.getParent().getName(), it.simpleName,  it) } // model, id, fq
+params.train_references = ""
+train_references = params.train_references.split(",").collect { it }
+
+train_coverages = [2, 5, 10, 30, 50, 100]
+
+
+def get_train_data(train_dir){
+
+    // Get the training data from train_dir/{model_name}
+
+    illumina = channel.fromFilePairs("${train_dir}/**/${params.training_set_illumina_glob}", type: 'file', flat: true)
+        .map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fw, rev
+
+    ont = channel.fromPath("${train_dir}/**/${params.training_set_ont_glob}", type: 'file')
+        .map { tuple(it.getParent().getName(), it.simpleName,  it) } // model, id, fq
 
     return illumina.join(ont, by: [0, 1])
 
 }
 
+workflow train_forest {
+    take:
+        train_data  // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
+    main:
+        fastq_model_cov = RasusaMultiTraining(train_data, train_coverages)
+        mapped_model_cov = MinimapMultiTraining(fastq_model_cov)
+        if (params.caller == "medaka"){
+            variants_model_cov = MedakaVariantsTraining(mapped_model_cov)
+        } else if (params.caller == "clair"){
+            variants_model_cov = ClairVariantsTraining(mapped_model_cov)
+        }
+        variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference        
+    emit:
+        null
+
+}
 
 workflow publication {
 
@@ -410,7 +406,7 @@ workflow publication {
     main:
         // Step 1: Training isolate sets: call Illumina reference VCFs for each reference genome (in param.dir_train: set1/*.ref.fastq, set1/*.ont.fastq)
 
-        get_train_data(params.dir_train) | view
+        get_train_data(params.train_dir) | view
 
 
         // Step2: Training isolate sets: train RF polishers for each reference genome
@@ -466,11 +462,13 @@ workflow {
         println "Forest evaluation parsed ONT variant calls in directory: $params.dir_ont"
         get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
     } else if (params.workflow == "forest_training"){
-        println "Forest training using collections in directory: $params.dir_train"
-        get_train_data(params.dir_train) | train_forest
+        println "Forest training using collections in directory: $params.train_dir"
+        get_train_data(params.train_dir) | train_forest
     } else if (params.workflow == "publication"){
-        println "Initiate publication replicate workflow on training directory: $params.dir_train"
-        get_train_data(params.dir_train) | view
+        println "Initiate publication replicate workflow on training directory: $params.train_dir"
+        train_data = get_train_data(params.train_dir)
+        TrainingReferenceSnippy(train_data, publication_references)
+
     }
 
 
