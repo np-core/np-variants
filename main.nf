@@ -367,6 +367,23 @@ train_references = params.train_references.split(",").collect { it }
 
 train_coverages = [2, 5, 10, 30, 50, 100]
 
+def showTrainingConfiguration() {
+    log.info"""
+
+    Model Training
+    ==============
+
+    Directory: ${params.train_dir}
+    References: ${train_references}
+    Coverages: ${train_coverages}
+
+    Model evaluation
+    ================
+
+
+    """.stripIndent()
+} 
+
 
 def get_train_data(train_dir){
 
@@ -465,7 +482,7 @@ workflow {
         println "Forest training using collections in directory: $params.train_dir"
         get_train_data(params.train_dir) | train_forest
     } else if (params.workflow == "publication"){
-        println "Initiate publication replicate workflow on training directory: $params.train_dir"
+        showTrainingConfiguration()
         train_data = get_train_data(params.train_dir)
         TrainingReferenceSnippy(train_data, publication_references)
 
