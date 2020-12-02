@@ -373,9 +373,11 @@ def showTrainingConfiguration() {
     Model Training
     ==============
 
-    Directory: ${params.train_dir}
-    References: ${train_references}
-    Coverages: ${train_coverages}
+    Model directory   : ${params.train_dir}
+    References        : ${train_references}
+    Variant caller    : ${params.caller}
+    Coverage subsets  : ${train_coverages}
+    
 
     Model evaluation
     ================
