@@ -406,7 +406,7 @@ def get_train_data(dir_train){
 workflow publication {
 
     take:
-        null
+        reads
     main:
         // Step 1: Training isolate sets: call Illumina reference VCFs for each reference genome (in param.dir_train: set1/*.ref.fastq, set1/*.ont.fastq)
 
