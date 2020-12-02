@@ -274,12 +274,6 @@ def get_evaluation_batches(snippy_dir, ont_dir){
     return data
 
 }
-def get_train_data(dir_train){
-
-    return channel.fromFilePairs("${dir_train}/**/*.{ref.vcf,fastq}", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fq, refvcf
-
-}
-
 
 include { Fastp } from './modules/fastp'
 include { SnippyFastq } from './modules/snippy'
@@ -379,7 +373,7 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairVariantsTraining(mapped_model_cov)
         }
-        variants_model_cov | groupTuple(by: [0,1] ) | TrainRandomForest   // by model_name, reference        
+        variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference        
     emit:
         null
 
@@ -394,13 +388,40 @@ workflow evaluate_forest {
         null
 }
 
-workflow train_evaluate_forest {
+include { TrainingReferenceSnippy } from './modules/snippy'
+
+params.training_set_illumina_glob = "*_R{1,2}.fastq.gz"
+params.training_set_ont_glob = "*.fastq"
+
+def get_train_data(dir_train){
+
+    illumina = channel.fromFilePairs("${dir_train}/**/${params.training_set_illumina_glob}", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fw, rev
+    ont = channel.frompath("${dir_train}/**/${params.training_set_ont_glob}", type: 'file').map { tuple(it[1].getParent().getName(), it[0],  it[1]) }
+
+    return illumina.join(ont, by: [0, 1])
+
+}
+
+
+workflow publication {
 
     take:
-        basecalls
+        null
     main:
-        snippy_ref = SnippyFastqMulti(Fastp(reads), train_references)  // generate reference illumina variant calls
-        create_training_collections(reads, snippy_ref)
+        // Step 1: Training isolate sets: call Illumina reference VCFs for each reference genome (in param.dir_train: set1/*.ref.fastq, set1/*.ont.fastq)
+
+        get_train_data(params.dir_train) | view
+
+
+        // Step2: Training isolate sets: train RF polishers for each reference genome
+
+
+        // Step 3: Evaluation isolate sets: call the evaluation isolate reference Illumina VCFs with Snippy for each reference genome
+
+
+
+        // Step 4:Evaluation isolate sets: evaluate the different RF models on ONT data in comparison to Illumina reference VCFs
+
     emit:
         null
 
@@ -447,6 +468,9 @@ workflow {
     } else if (params.workflow == "forest_training"){
         println "Forest training using collections in directory: $params.dir_train"
         get_train_data(params.dir_train) | train_forest
+    } else if (params.workflow == "publication"){
+        println "Initiate publication replicate workflow on training directory: $params.dir_train"
+        get_train_data(params.dir_train) | view
     }
 
 
