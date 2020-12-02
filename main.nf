@@ -396,9 +396,9 @@ params.training_set_ont_glob = "*.fastq"
 def get_train_data(dir_train){
 
     illumina = channel.fromFilePairs("${dir_train}/**/${params.training_set_illumina_glob}", type: 'file', flat: true).map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fw, rev
-    ont = channel.fromPath("${dir_train}/**/${params.training_set_ont_glob}", type: 'file') | view // .map { tuple(it[1].getParent().getName(), it[0],  it[1]) }
+    ont = channel.fromPath("${dir_train}/**/${params.training_set_ont_glob}", type: 'file') |.map { tuple(it.getParent().getName(), it.simpleName,  it } // model, id, fq
 
-    // return illumina.join(ont, by: [0, 1])
+    return illumina.join(ont, by: [0, 1])
 
 }
 
