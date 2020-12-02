@@ -373,9 +373,9 @@ def showTrainingConfiguration() {
     Model Training
     ==============
 
+    Variant caller    : ${params.caller}
     Model directory   : ${params.train_dir}
     References        : ${train_references}
-    Variant caller    : ${params.caller}
     Coverage subsets  : ${train_coverages}
     
 
@@ -486,7 +486,7 @@ workflow {
     } else if (params.workflow == "publication"){
         showTrainingConfiguration()
         train_data = get_train_data(params.train_dir)
-        TrainingReferenceSnippy(train_data, publication_references)
+        TrainingReferenceSnippy(train_data, train_references)
 
     }
 
