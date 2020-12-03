@@ -497,7 +497,7 @@ workflow {
         get_train_data(params.train_dir) | view
         train_data = get_train_data(params.train_dir) | FastpTraining
         models = SnippyTraining(train_data, train_references) | train_forest
-        eval_data = get_evaluation_data()
+        eval_data = get_eval_data() | view
     }
 
 
