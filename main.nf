@@ -353,7 +353,7 @@ include { RasusaTraining } from './modules/rasusa'
 include { MinimapTraining } from './modules/minimap2'
 include { ClairTraining } from './modules/clair'
 include { MedakaTraining } from './modules/medaka'
-include { TrainRandomForest } from './modules/variants'
+include { RandomForestTraining } from './modules/variants'
 
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
@@ -431,9 +431,9 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairTraining(mapped_model_cov)
         }
-        variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference     
+        variants_model_cov | groupTuple(by: [0, 1] ) | RandomForestTraining   // by model_name, reference     
     emit:
-        TrainRandomForest.out
+        RandomForestTraining.out
 
 }
 
@@ -501,6 +501,7 @@ workflow {
         get_train_data(params.train_dir) | train_forest
     } else if (params.workflow == "publication"){
         showTrainingConfiguration()
+        get_train_data(params.train_dir) | view
         train_data = get_train_data(params.train_dir) | FastpTraining
         SnippyTraining(train_data, train_references) | train_forest
 
