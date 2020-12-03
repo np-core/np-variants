@@ -65,6 +65,7 @@ def check_path(p, descr) {
 
 // Workflow selection 
 params.workflow = "core"
+params.subworkflow = ""
 params.outdir = "$PWD/results"
 
 params.reference = "" // FASTA reference genome
@@ -315,14 +316,6 @@ workflow denovo_snps {
 }
 
 
-workflow evaluate_forest {
-    take:
-        eval_batch  // per file: id, snippy_vcf, ont_vcf, ont_stats
-    main:
-        EvaluateRandomForest(eval_batch, eval_models) | collect | ProcessRandomForestEvaluations
-    emit:
-        null
-}
 
 // PUBLICATION REPLICATION
 
@@ -338,11 +331,12 @@ params.train_references = ""
 train_references = params.train_references.split(",").collect { file(it) }
 train_coverages = [2, 5, 10, 30, 50, 100]
 
-
-// Evaluation
-
 params.eval_dir = ""
 params.mask_weak = 0.8
+params.eval_references = ""
+eval_references = params.eval_references.split(",").collect { file(it) }
+
+// Evaluation
 
 model_collections = ""
 evaluation_collections = ""
@@ -374,7 +368,7 @@ def showTrainingConfiguration() {
     ==============
 
     Model directory         : ${params.train_dir}
-    References              : ${train_references}
+    Training references     : ${train_references}
     Coverage subsets        : ${train_coverages}
     Training test size      : ${params.test_size}
 
@@ -392,13 +386,37 @@ def showTrainingConfiguration() {
     """.stripIndent()
 } 
 
+def showEvaluationConfiguration(){
+    
+    log.info"""
+    
+    Global config
+    ==============
+
+    Variant caller          : ${params.caller}
+    Oxford Nanopore         : ${params.ont_glob}
+    Illumina                : ${params.illumina_glob}
+
+    Model evaluation
+    ================
+
+    Evaluation directory   : ${params.eval_dir}
+    Evaluation references  : ${params.eval_references}
+    Evaluation models      : ${params.eval_models}
+    Mask weak sites        : ${params.mask_weak}
+
+    Evaluation collections : ${evaluation_collections}
+
+    """.stripIndent()
+
+}
 
 def get_train_data(train_dir){
 
     // Get the training data from train_dir/{model_name}
 
     illumina = channel.fromFilePairs("${train_dir}/**/${params.illumina_glob}", type: 'file', flat: true)
-        .map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fw, rev
+        .map { tuple(it[1].getParent().getName(), it[0], it[1], it[2]) } // model, id, fw, rev
 
     ont = channel.fromPath("${train_dir}/**/${params.ont_glob}", type: 'file')
         .map { tuple(it.getParent().getName(), it.simpleName,  it) } // model, id, fq
@@ -407,18 +425,11 @@ def get_train_data(train_dir){
 
 }
 
-def get_eval_data(snippy_dir, ont_dir){
 
-    ont = Channel.fromFilePairs("${ont_dir}/*.{vcf,txt}", flat: true, type: 'file')
-    
-    snippy = Channel.fromPath("${snippy_dir}/*.ref.vcf").map { tuple(it.simpleName, it) }
-    
-    data = ont.join(snippy) | map { tuple(it[0], it[3], it[2], it[1]) }
+def get_eval_models() {
 
-    return data
-
+    return Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
 }
-
 
 workflow train_forest {
     take:
@@ -437,22 +448,43 @@ workflow train_forest {
 
 }
 
-workflow publication {
+
+// workflow eval_forest {
+//     take:
+//         eve  // null
+//     main:
+        
+//         illumina = Channel.fromFilePairs("${params.eval_dir}/${params.illumina_glob}", flat: true, type: 'file') | FastpEvaluation
+//         SnippyEvaluation(illumina, eval_references)  // call reference Illumina evaluation isolates with Snippy for each reference
+        
+//         ont = Channel.fromPath("${params.eval_dir}/${params.ont_glob}", type: 'file')
+//         mapped = MinimapEvaluation(ont, eval_references) // prep  ONT SNP calls with Clair for each reference
+        
+//         if (params.caller == "medaka"){
+//             eval_variants = MedakaEvaluation(mapped)
+//         } else if (params.caller == "clair"){
+//             eval_variants = ClairEvaluation(mapped)
+//         }
+
+//         eval_models = get_eval_models()
+//         EvaluateRandomForest(eval_variants, eval_models) | collect | ProcessEvaluations
+//     emit:
+//         null
+// }
+
+workflow random_forest {
 
     take:
         reads
     main:
-        showTrainingConfiguration()
-        train_data = get_train_data(params.train_dir)
-        SnippyTraining(train_data, train_references) | train_forest
-
-
-        // Step 3: Evaluation isolate sets: call the evaluation isolate reference Illumina VCFs with Snippy for each reference genome
-
-
-
-        // Step 4:Evaluation isolate sets: evaluate the different RF models on ONT data in comparison to Illumina reference VCFs
-
+        if (params.subworkflow == "train") {
+            showTrainingConfiguration()
+            train_data = get_train_data(params.train_dir) | FastpTraining
+            models = SnippyTraining(train_data, train_references) | train_forest
+        } else if (params.subworkflow == "eval"){
+            showEvaluationConfiguration()
+          
+        }
     emit:
         null
 
@@ -493,11 +525,15 @@ workflow {
         println "Calling de novo SNPs ($params.caller) on FASTQ input: $params.fastq"
         get_single_file(params.fastq) | denovo_snps
     } else if (params.workflow == "random_forest"){
-        showTrainingConfiguration()
-        get_train_data(params.train_dir) | view
-        train_data = get_train_data(params.train_dir) | FastpTraining
-        models = SnippyTraining(train_data, train_references) | train_forest
-        // eval_data = get_eval_data(params.eval_dir) | view
+
+        if (params.subworkflow == "train") {
+            showTrainingConfiguration()
+            train_data = get_train_data(params.train_dir) | FastpTraining
+            models = SnippyTraining(train_data, train_references) | train_forest
+        } else if (params.subworkflow == "eval"){
+            showEvaluationConfiguration()
+        }
+
     }
 
 
