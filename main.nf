@@ -354,7 +354,7 @@ workflow evaluate_forest {
 include { SnippyModelReference } from './modules/snippy'
 include { RasusaTraining } from './modules/rasusa'
 include { MinimapTraining } from './modules/minimap2'
-include { ClairVTraining } from './modules/clair'
+include { ClairTraining } from './modules/clair'
 include { MedakaTraining } from './modules/medaka'
 include { TrainRandomForest } from './modules/variants'
 
