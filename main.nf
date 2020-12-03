@@ -486,7 +486,7 @@ workflow {
     } else if (params.workflow == "publication"){
         showTrainingConfiguration()
         train_data = get_train_data(params.train_dir)
-        TrainingReferenceSnippy(train_data, train_references)
+        TrainingReferenceSnippy(train_data, train_references) | train_forest
 
     }
 
