@@ -347,6 +347,7 @@ params.mask_weak = 0.8
 model_collections = ""
 evaluation_collections = ""
 
+include { FastpTraining } from './modules/fastp'
 include { ModelReferenceVariants } from './modules/snippy'
 include { RasusaTraining } from './modules/rasusa'
 include { MinimapTraining } from './modules/minimap2'
@@ -500,7 +501,7 @@ workflow {
         get_train_data(params.train_dir) | train_forest
     } else if (params.workflow == "publication"){
         showTrainingConfiguration()
-        train_data = get_train_data(params.train_dir)
+        train_data = get_train_data(params.train_dir) | FastpTraining
         ModelReferenceVariants(train_data, train_references) | train_forest
 
     }
