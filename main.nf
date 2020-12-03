@@ -269,11 +269,6 @@ include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
 include { RasusaMulti } from './modules/rasusa'
 
-include { TrainRandomForest } from './modules/variants'
-include { RasusaMultiTraining } from './modules/rasusa'
-include { MinimapMultiTraining } from './modules/minimap2'
-include { ClairVariantsTraining } from './modules/clair'
-include { MedakaVariantsTraining } from './modules/medaka'
 
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
@@ -354,7 +349,14 @@ workflow evaluate_forest {
         null
 }
 
-include { TrainingReferenceSnippy } from './modules/snippy'
+// PUBLICATION REPLICATION
+
+include { SnippyModelReference } from './modules/snippy'
+include { RasusaTraining } from './modules/rasusa'
+include { MinimapTraining } from './modules/minimap2'
+include { ClairVTraining } from './modules/clair'
+include { MedakaTraining } from './modules/medaka'
+include { TrainRandomForest } from './modules/variants'
 
 params.training_set_illumina_glob = "*_R{1,2}.fastq.gz"
 params.training_set_ont_glob = "*.fastq"
@@ -405,12 +407,12 @@ workflow train_forest {
     take:
         train_data  // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
     main:
-        fastq_model_cov = RasusaMultiTraining(train_data, train_coverages)
-        mapped_model_cov = MinimapMultiTraining(fastq_model_cov)
+        fastq_model_cov = RasusaTraining(train_data, train_coverages)
+        mapped_model_cov = MinimapTraining(fastq_model_cov)
         if (params.caller == "medaka"){
-            variants_model_cov = MedakaVariantsTraining(mapped_model_cov)
+            variants_model_cov = MedakaTraining(mapped_model_cov)
         } else if (params.caller == "clair"){
-            variants_model_cov = ClairVariantsTraining(mapped_model_cov)
+            variants_model_cov = ClairTraining(mapped_model_cov)
         }
         variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference        
     emit:
@@ -423,12 +425,9 @@ workflow publication {
     take:
         reads
     main:
-        // Step 1: Training isolate sets: call Illumina reference VCFs for each reference genome (in param.dir_train: set1/*.ref.fastq, set1/*.ont.fastq)
-
-        get_train_data(params.train_dir) | view
-
-
-        // Step2: Training isolate sets: train RF polishers for each reference genome
+        showTrainingConfiguration()
+        train_data = get_train_data(params.train_dir)
+        SnippyModelReference(train_data, train_references) | train_forest
 
 
         // Step 3: Evaluation isolate sets: call the evaluation isolate reference Illumina VCFs with Snippy for each reference genome
