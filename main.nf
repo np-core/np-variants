@@ -156,7 +156,7 @@ def helpMessage() {
     Deployment and resource configuration:
 
             Resources can be configured hierarchically by first selecting a configuration file from
-            presets with `--config` and a resource presets with `--resource_config`
+            presets with `--config` and a resource preset with `--resource_config`
 
             Specific process execution profiles defined within the configuration files are selected with
             the native argument `-profile`
@@ -363,7 +363,7 @@ params.train_dir = ""
 params.test_size = 0.3
 
 params.train_references = ""
-train_references = params.train_references.split(",").collect { it }
+train_references = params.train_references.split(",").collect { file(it) }
 
 train_coverages = [2, 5, 10, 30, 50, 100]
 
