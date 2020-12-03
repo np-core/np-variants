@@ -326,6 +326,27 @@ workflow evaluate_forest {
 
 // PUBLICATION REPLICATION
 
+// Global
+
+params.illumina_glob = "*_R{1,2}.fastq.gz"
+params.ont_glob = "*.fastq"
+
+// Training 
+params.train_dir = ""
+params.test_size = 0.3
+params.train_references = ""
+train_references = params.train_references.split(",").collect { file(it) }
+train_coverages = [2, 5, 10, 30, 50, 100]
+
+
+// Evaluation
+
+params.eval_dir = ""
+params.mask_weak = 0.8
+
+model_collections = ""
+evaluation_collections = ""
+
 include { ModelReferenceVariants } from './modules/snippy'
 include { RasusaTraining } from './modules/rasusa'
 include { MinimapTraining } from './modules/minimap2'
@@ -336,29 +357,7 @@ include { TrainRandomForest } from './modules/variants'
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessRandomForestEvaluations } from './modules/variants'
 
-// Global
 
-params.illumina_glob = "*_R{1,2}.fastq.gz"
-params.ont_glob = "*.fastq"
-
-// Training 
-
-params.train_dir = ""
-params.test_size = 0.3
-params.train_references = ""
-train_references = params.train_references.split(",").collect { file(it) }
-
-train_coverages = [2, 5, 10, 30, 50, 100]
-
-
-// Evaluation
-
-params.eval_dir = ""
-params.mask_weak = 0.8
-
-
-model_collections = ""
-evaluation_collections = ""
 
 def showTrainingConfiguration() {
     log.info"""
