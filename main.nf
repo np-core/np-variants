@@ -492,7 +492,6 @@ workflow {
     } else if (params.workflow == "denovo"){
         println "Calling de novo SNPs ($params.caller) on FASTQ input: $params.fastq"
         get_single_file(params.fastq) | denovo_snps
-    }
     } else if (params.workflow == "random_forest"){
         showTrainingConfiguration()
         get_train_data(params.train_dir) | view
