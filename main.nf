@@ -356,14 +356,9 @@ train_coverages = [2, 5, 10, 30, 50, 100]
 params.eval_dir = ""
 params.mask_weak = 0.8
 
-def list_dirs(dir){
-    dlist = []
-	new File(dir).eachDir {dlist << it.name }
-    return dlist
-}
 
-model_collections = list_dirs(params.train_dir)
-evaluation_collections = list_dirs(params.eval_dir)
+model_collections = ""
+evaluation_collections = ""
 
 def showTrainingConfiguration() {
     log.info"""
