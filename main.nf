@@ -351,7 +351,7 @@ workflow evaluate_forest {
 
 // PUBLICATION REPLICATION
 
-include { SnippyModelReference } from './modules/snippy'
+include { ModelReferenceVariants } from './modules/snippy'
 include { RasusaTraining } from './modules/rasusa'
 include { MinimapTraining } from './modules/minimap2'
 include { ClairTraining } from './modules/clair'
@@ -427,7 +427,7 @@ workflow publication {
     main:
         showTrainingConfiguration()
         train_data = get_train_data(params.train_dir)
-        SnippyModelReference(train_data, train_references) | train_forest
+        ModelReferenceVariants(train_data, train_references) | train_forest
 
 
         // Step 3: Evaluation isolate sets: call the evaluation isolate reference Illumina VCFs with Snippy for each reference genome
@@ -485,7 +485,7 @@ workflow {
     } else if (params.workflow == "publication"){
         showTrainingConfiguration()
         train_data = get_train_data(params.train_dir)
-        TrainingReferenceSnippy(train_data, train_references) | train_forest
+        ModelReferenceVariants(train_data, train_references) | train_forest
 
     }
 
