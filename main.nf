@@ -116,19 +116,6 @@ params.clair_haploid = "--haploid_sensitive"
 params.coverage = ""
 params.genome_size = "2.8m"
 
-// Forest Evaluation
-
-params.dir_snippy = ""
-params.dir_ont = ""
-params.eval_mask_weak = 0.8
-params.eval_models = ""
-params.eval_caller = "clair"
-
-if ( params.eval_models && params.eval_models instanceof String ){
-    eval_models = params.eval_models.split(",").collect { file(it) }
-} else {
-    eval_models = params.eval_models
-}
 
 if ( params.coverage instanceof String ){
     coverage = params.coverage.split(",").collect { it }
@@ -245,17 +232,7 @@ def get_fast5_dir(dir){
 def get_fast5_panels(dir){
     return channel.fromPath("${dir}/**/*", type: 'dir').map { tuple(it.getParent().getName(), it.getName(), it) }
 }
-def get_evaluation_batches(snippy_dir, ont_dir){
 
-    ont = Channel.fromFilePairs("${ont_dir}/*.{vcf,txt}", flat: true, type: 'file')
-    
-    snippy = Channel.fromPath("${snippy_dir}/*.ref.vcf").map { tuple(it.simpleName, it) }
-    
-    data = ont.join(snippy) | map { tuple(it[0], it[3], it[2], it[1]) }
-
-    return data
-
-}
 
 include { Fastp } from './modules/fastp'
 include { SnippyFastq } from './modules/snippy'
@@ -269,9 +246,6 @@ include { MinimapONT } from './modules/minimap2'
 include { ClairVariants } from './modules/clair'
 include { RasusaMulti } from './modules/rasusa'
 
-
-include { EvaluateRandomForest } from './modules/variants'
-include { ProcessRandomForestEvaluations } from './modules/variants'
 
 workflow snippy_fastq {
     take:
@@ -358,32 +332,53 @@ include { ClairTraining } from './modules/clair'
 include { MedakaTraining } from './modules/medaka'
 include { TrainRandomForest } from './modules/variants'
 
-params.training_set_illumina_glob = "*_R{1,2}.fastq.gz"
-params.training_set_ont_glob = "*.fastq"
+include { EvaluateRandomForest } from './modules/variants'
+include { ProcessRandomForestEvaluations } from './modules/variants'
+
+// Global
+
+params.illumina_glob = "*_R{1,2}.fastq.gz"
+params.ont_glob = "*.fastq"
+
+// Training 
 
 params.train_dir = ""
 params.test_size = 0.3
-
 params.train_references = ""
 train_references = params.train_references.split(",").collect { file(it) }
 
 train_coverages = [2, 5, 10, 30, 50, 100]
 
-def showTrainingConfiguration() {
-    log.info"""
 
-    Model Training
+// Evaluation
+
+params.eval_dir = ""
+params.mask_weak = 0.8
+
+
+def showTrainingConfiguration() {
+    log.info"""\n
+    
+    Global config
     ==============
 
-    Variant caller    : ${params.caller}
-    Model directory   : ${params.train_dir}
-    References        : ${train_references}
-    Coverage subsets  : ${train_coverages}
-    
+    Variant caller : ${params.caller}
+    ONT glob       : ${params.ont_glob}
+    Illumina glob  : ${params.illumina_glob}
+
+    Model training
+    ==============
+
+    Model directory    : ${params.train_dir}
+    References         : ${train_references}
+    Coverage subsets   : ${train_coverages}
+    Training test size : ${params.test_size}
 
     Model evaluation
     ================
 
+    Evaluation directory : ${params.eval_dir}
+    Mask weak sites      : ${params.mask_weak}
 
     """.stripIndent()
 } 
@@ -393,15 +388,28 @@ def get_train_data(train_dir){
 
     // Get the training data from train_dir/{model_name}
 
-    illumina = channel.fromFilePairs("${train_dir}/**/${params.training_set_illumina_glob}", type: 'file', flat: true)
+    illumina = channel.fromFilePairs("${train_dir}/**/${params.illumina_glob}", type: 'file', flat: true)
         .map { tuple(it[1].getParent().getName(), it[0],  it[1], it[2]) } // model, id, fw, rev
 
-    ont = channel.fromPath("${train_dir}/**/${params.training_set_ont_glob}", type: 'file')
+    ont = channel.fromPath("${train_dir}/**/${params.ont_glob}", type: 'file')
         .map { tuple(it.getParent().getName(), it.simpleName,  it) } // model, id, fq
 
     return illumina.join(ont, by: [0, 1])
 
 }
+
+def get_evaluation_batches(snippy_dir, ont_dir){
+
+    ont = Channel.fromFilePairs("${ont_dir}/*.{vcf,txt}", flat: true, type: 'file')
+    
+    snippy = Channel.fromPath("${snippy_dir}/*.ref.vcf").map { tuple(it.simpleName, it) }
+    
+    data = ont.join(snippy) | map { tuple(it[0], it[3], it[2], it[1]) }
+
+    return data
+
+}
+
 
 workflow train_forest {
     take:
@@ -414,9 +422,9 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairTraining(mapped_model_cov)
         }
-        variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference        
+        variants_model_cov | groupTuple(by: [0, 2] ) | TrainRandomForest   // by model_name, reference     
     emit:
-        null
+        TrainRandomForest.out
 
 }
 
