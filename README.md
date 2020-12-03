@@ -15,6 +15,7 @@ nextflow np-core/np-variants --help true
    - [Core Variants (Illumina)](#core-variants-illumina)
    - [Candiate Variants (ONT)](#candidate-variants-ont)
    - [*De novo* Variants (ONT)](#de-novo-variants-ont)
+   - [Random Forest SNP polishers (ONT)](#de-novo-variants-ont)
 
 ## Usage
 
@@ -61,7 +62,7 @@ Deployment and resource configuration:
 =========================================
 ```
 
-## Core Variants (Illumina)
+## Core Variants: Snippy (Illumina)
 
 In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gubbins` to generate a non-recombinant core-genome alignment for the provided set of isolates (includes output of non-core per-isolate variant calls) from high-quality short-read sequence data:
 
@@ -69,7 +70,7 @@ In its simplest incarnation, the variant calling workflow uses `Snippy` and `Gub
 nextflow run np-core/np-variants --workflow core --fastq "isolates/*_R{1,2}.fq.gz" --reference ref.fasta
 ```
 
-## Candidate Variants (ONT)
+## Candidate Variants: Megalodon (ONT)
 
 Candidate variants - for example core-genome SNPs called with `--workflow core` using `Snippy` - can be used as input to anchor the neural network basecalling output from `Guppy` and call candidates with `Megalodon`. `NanoPath` then merges candidates and calls into a filtered alignment which can be used for 'hybrid' phylogenetic trees, combining both Illumina and ONT sequence data. While this is useful to reconsruct divergences within a known evolutionary background, for example when producing barcoded nanopore panels from an outbreak of a known lineage for which sufficient background data is available, please note that within-outbreak branches would not consider novel variation (particularly if divergence is deep, that is, if the outbreak has been persisting and accumulated novel variation for some time) and thus, within-outbreak phylodynamic estimates based on candidate variants may be far from accurate.
 
@@ -79,11 +80,11 @@ Candidate variants - for example core-genome SNPs called with `--workflow core` 
 nextflow run np-core/np-variants --config jcu -profile tesla --workflow candidate --fast5 fast5/ --candidates core.vcf
 ```
 
-## *De novo* Variants (ONT)
+## *De novo* Variants: Clair | Medaka (ONT)
 
-## Variant Polishers (ONT)
+## Random Forest SNP Polishers: Clair | Medaka (ONT)
 
-Variant polishers trained with `Nextflow` sub-workflow: `train` 
+SNP polishers trained with `Nextflow` sub-workflow: `train` 
 
 The purpose of this workflow is to automate training random forest classifiers to remove false SNP calls from a VCF called with `Clair` or `Medaka`. We train the classifiers on referenced (Illumina PE) nanopore reads (barcoded, demultiplexed) over a range of coverage subsets (to account for coverage differences in the application of the classifiers).
 
