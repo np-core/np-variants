@@ -328,7 +328,7 @@ params.ont_glob = "*.fastq"
 params.train_dir = ""
 params.test_size = 0.3
 params.train_references = ""
-if params.train_references {
+if (params.train_references) {
     train_references = params.train_references.split(",").collect { file(it) }
 } else {
     train_references = null
@@ -340,7 +340,7 @@ params.eval_dir = ""
 params.mask_weak = 0.8
 params.eval_references = ""
 
-if params.eval_references {
+if (params.eval_references) {
     eval_references = params.eval_references.split(",").collect { file(it) }
 } else {
     eval_references = null
