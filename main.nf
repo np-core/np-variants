@@ -34,6 +34,7 @@ For interactive dashboard operation and report generation:
 */
 
 import java.nio.file.Paths
+import groovy.io.*
 
 nextflow.enable.dsl=2
 
@@ -355,30 +356,43 @@ train_coverages = [2, 5, 10, 30, 50, 100]
 params.eval_dir = ""
 params.mask_weak = 0.8
 
+def list_dirs(dir){
+    dlist = []
+	new File(dir).eachDir {dlist << it.name }
+    return dlist
+}
+
+model_collections = list_dirs(params.train_dir)
+evaluation_collections = list_dirs(params.eval_dir)
 
 def showTrainingConfiguration() {
-    log.info"""\n
+    log.info"""
     
     Global config
     ==============
 
-    Variant caller : ${params.caller}
-    ONT glob       : ${params.ont_glob}
-    Illumina glob  : ${params.illumina_glob}
+    Variant caller          : ${params.caller}
+    Oxford Nanopore         : ${params.ont_glob}
+    Illumina                : ${params.illumina_glob}
 
     Model training
     ==============
 
-    Model directory    : ${params.train_dir}
-    References         : ${train_references}
-    Coverage subsets   : ${train_coverages}
-    Training test size : ${params.test_size}
+    Model directory         : ${params.train_dir}
+    References              : ${train_references}
+    Coverage subsets        : ${train_coverages}
+    Training test size      : ${params.test_size}
+
+    Model collections       : ${model_collections}
+
 
     Model evaluation
     ================
 
-    Evaluation directory : ${params.eval_dir}
-    Mask weak sites      : ${params.mask_weak}
+    Evaluation directory   : ${params.eval_dir}
+    Mask weak sites        : ${params.mask_weak}
+
+    Evaluation collections : ${evaluation_collections}
 
     """.stripIndent()
 } 
@@ -422,7 +436,7 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairTraining(mapped_model_cov)
         }
-        variants_model_cov | groupTuple(by: [0, 2] ) | TrainRandomForest   // by model_name, reference     
+        variants_model_cov | groupTuple(by: [0, 1] ) | TrainRandomForest   // by model_name, reference     
     emit:
         TrainRandomForest.out
 
