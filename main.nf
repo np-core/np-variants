@@ -347,16 +347,16 @@ params.mask_weak = 0.8
 model_collections = ""
 evaluation_collections = ""
 
-include { FastpTraining } from 'modules/fastp'
-include { SnippyTraining } from 'modules/snippy'
-include { RasusaTraining } from 'modules/rasusa'
-include { MinimapTraining } from 'modules/minimap2'
-include { ClairTraining } from 'modules/clair'
-include { MedakaTraining } from 'modules/medaka'
-include { RandomForestTraining } from 'modules/variants'
+include { FastpTraining } from './modules/fastp'
+include { SnippyTraining } from './modules/snippy'
+include { RasusaTraining } from './modules/rasusa'
+include { MinimapTraining } from './modules/minimap2'
+include { ClairTraining } from './modules/clair'
+include { MedakaTraining } from './modules/medaka'
+include { RandomForestTraining } from './modules/variants'
 
-include { EvaluateRandomForest } from '/modules/variants'
-include { ProcessRandomForestEvaluations } from '/modules/variants'
+include { EvaluateRandomForest } from './modules/variants'
+include { ProcessRandomForestEvaluations } from './modules/variants'
 
 
 
