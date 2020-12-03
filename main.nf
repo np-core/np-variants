@@ -328,13 +328,23 @@ params.ont_glob = "*.fastq"
 params.train_dir = ""
 params.test_size = 0.3
 params.train_references = ""
-train_references = params.train_references.split(",").collect { file(it) }
+if params.train_references {
+    train_references = params.train_references.split(",").collect { file(it) }
+} else {
+    train_references = null
+}
+
 train_coverages = [2, 5, 10, 30, 50, 100]
 
 params.eval_dir = ""
 params.mask_weak = 0.8
 params.eval_references = ""
-eval_references = params.eval_references.split(",").collect { file(it) }
+
+if params.eval_references {
+    eval_references = params.eval_references.split(",").collect { file(it) }
+} else {
+    eval_references = null
+}
 
 // Evaluation
 
