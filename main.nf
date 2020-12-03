@@ -407,7 +407,7 @@ def get_train_data(train_dir){
 
 }
 
-def get_evaluation_batches(snippy_dir, ont_dir){
+def get_eval_data(snippy_dir, ont_dir){
 
     ont = Channel.fromFilePairs("${ont_dir}/*.{vcf,txt}", flat: true, type: 'file')
     
@@ -431,7 +431,7 @@ workflow train_forest {
         } else if (params.caller == "clair"){
             variants_model_cov = ClairTraining(mapped_model_cov)
         }
-        variants_model_cov | groupTuple(by: [0, 1] ) | RandomForestTraining   // by model_name, reference     
+        variants_model_cov | groupTuple(by: [0, 1, 2] ) | RandomForestTraining   // by model_name, refname, reference     
     emit:
         RandomForestTraining.out
 
@@ -469,7 +469,7 @@ workflow {
             get_fast5_dir(params.fast5) | megalodon_dir
         }
 
-    } else if (params.workflow == "snippy" | params.workflow == "snippy-core") {
+    } else if (params.workflow == "snippy" | params.workflow == "snippy_core") {
         println "Calling SNPs using Snippy on input: $params.fastq (fastq) / $params.fasta (fasta)"
         if (params.fastq){
             fastq = get_paired_fastq(params.fastq) | snippy_fastq
@@ -484,7 +484,7 @@ workflow {
 
         snippy = fasta.mix(fastq)
         
-        if (params.workflow == "snippy-core"){
+        if (params.workflow == "snippy_core"){
             println "Calling core SNPs using SnippyCore and Gubbins"
             snippy | snippy_core
         }
@@ -492,19 +492,13 @@ workflow {
     } else if (params.workflow == "denovo"){
         println "Calling de novo SNPs ($params.caller) on FASTQ input: $params.fastq"
         get_single_file(params.fastq) | denovo_snps
-    } else if (params.workflow == "forest_evaluation"){
-        println "Forest evaluation parsed reference variant calls in directory: $params.dir_snippy"
-        println "Forest evaluation parsed ONT variant calls in directory: $params.dir_ont"
-        get_evaluation_batches(params.dir_snippy, params.dir_ont) | evaluate_forest
-    } else if (params.workflow == "forest_training"){
-        println "Forest training using collections in directory: $params.train_dir"
-        get_train_data(params.train_dir) | train_forest
-    } else if (params.workflow == "publication"){
+    }
+    } else if (params.workflow == "random_forest"){
         showTrainingConfiguration()
         get_train_data(params.train_dir) | view
         train_data = get_train_data(params.train_dir) | FastpTraining
-        SnippyTraining(train_data, train_references) | train_forest
-
+        models = SnippyTraining(train_data, train_references) | train_forest
+        eval_data = get_evaluation_data()
     }
 
 
