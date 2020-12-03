@@ -127,3 +127,15 @@ nextflow run np-core/np-variants -profile docker \
    --train_references jkd.fasta,dar.fasta \
    --test_size 0.3
 ```
+
+---
+
+SNP polishers evaluated with `Nextflow` sub-workflow: `eval`
+
+The purpose of this subworkflow is to evaluate the trained classifiers on sets of matching Illumina PE and ONT nanopore reads from the same isolates. This is mostly for the manuscript, but can be used to assess the performance of trained classifiers for their specific use cases if more matching short and long-read data on the same isolates is available.
+
+We need the following ingredients for the evaluations:
+
+* one or more reference sequences in `fasta` format to call reference and nanopore SNPs against
+* one or more model files trained with the `train` subworkflow
+* one or more collections of matching ONT and Illumina PE reads from the same isolate
