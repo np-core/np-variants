@@ -348,7 +348,7 @@ model_collections = ""
 evaluation_collections = ""
 
 include { FastpTraining } from './modules/fastp'
-include { ModelReferenceVariants } from './modules/snippy'
+include { SnippyTraining } from './modules/snippy'
 include { RasusaTraining } from './modules/rasusa'
 include { MinimapTraining } from './modules/minimap2'
 include { ClairTraining } from './modules/clair'
@@ -444,7 +444,7 @@ workflow publication {
     main:
         showTrainingConfiguration()
         train_data = get_train_data(params.train_dir)
-        ModelReferenceVariants(train_data, train_references) | train_forest
+        SnippyTraining(train_data, train_references) | train_forest
 
 
         // Step 3: Evaluation isolate sets: call the evaluation isolate reference Illumina VCFs with Snippy for each reference genome
@@ -502,7 +502,7 @@ workflow {
     } else if (params.workflow == "publication"){
         showTrainingConfiguration()
         train_data = get_train_data(params.train_dir) | FastpTraining
-        ModelReferenceVariants(train_data, train_references) | train_forest
+        SnippyTraining(train_data, train_references) | train_forest
 
     }
 
