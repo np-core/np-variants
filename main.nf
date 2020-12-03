@@ -4,12 +4,12 @@
 vim: syntax=groovy
 -*- mode: groovy;-*-
 ==============================================================================================================================
-                                        N P - S I G N A L   P I P E L I N E
+                                        N P - V A R I A N T S   P I P E L I N E
 ==============================================================================================================================
 
- Nanopore signal processing pipeline (Fast5)
+ Nanopore variant calling and processing pipeline (Fast5)
 
- Documentation: https://github.com/np-core/np-signal
+ Documentation: https://github.com/np-core/np-variants
 
  Original development by Queensland Genomics, Australian Institute of Tropical Health 
  and Medicince, The Peter Doherty Intitute for Infection and Immunity
@@ -138,75 +138,38 @@ def helpMessage() {
 
     Usage:
 
-    A typical command to construct a core-genome variant alignment from PE Illumina data:
+    A typical command to construct a bacterial core-genome SNP alignment from Illumina PE reads:
 
-        nextflow run np-core/np-variants --workflow core --path "*_R{1,2}.fastq.gz" --reference ref.fasta
+        nextflow run np-core/np-variants --workflow snippy --snippy_dir "*_R{1,2}.fastq.gz" --reference ref.fasta
+
+
+    Worfklows and subworkflows (--workflow | --subworkflow):
+
+        - snippy                 Call Illumina PE variants with Snippy
+            - snippy-core        Core genome SNP alignment with Snippy-Core
+        - candidate              Candidate-guided SNP calls with Megalodon
+        - denovo                 SNP calling with Clair or Medaka
+        - random_forest          Random Forest SNP polishers
+            - train              Train Random Forest classifiers on Snippy reference calls
+            - evaluate           Evaluate Random Forests classifiers on sets of genomes
+
+    Help:
+
+        nextflow run np-core/np-variants --workflow snippy --help true
 
     Deployment and resource configuration:
 
-            Resources can be configured hierarchically by first selecting a configuration file from
-            presets with `--config` and a resource preset with `--resource_config`
+        Specific process execution profiles defined within the configuration files are selected with
+        the native argument `-profile`
 
-            Specific process execution profiles defined within the configuration files are selected with
-            the native argument `-profile`
+        Resource configs can be configured hierarchically by first selecting a preset configuration
+        file with `--config` or a specific resource preset configuration with `--resource_config`
 
-            For more information see: https://github.com/np-core/config 
+        For more information see: https://github.com/np-core/config 
 
-    Available subworkflows:
+        Example:
 
-        - snippy | snippy-core     call variants from Illumina PE with Snippy / core genome alignment with Snippy-Core
-        - candidate_megalodon
-        - candidate_clair
-        - denovo
-        - forest_training
-        - forest_evaluation
-        - forest_polish
-
-    Required configuration:
-
-        --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]        
-        --reference                 reference genome (FASTA) for alignment and variant calling [${params.reference}]
-        --outdir                    output directory for results from workflow [${params.outdir}]
-
-    Snippy / Snippy-Core:
-
-        --fastq | --fasta           glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
-        --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
-        --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
-
-    Candidate Megalodon:
-
-        Model configuration files for Guppy can be found inside the container at: /guppy_models
-
-        --fast5                     directory or glob of directories containing Fast5 files for a single sample [${params.path}]
-        --panels                    path to nested panel directories, which contain barcode subdirectories (e.g. fast5/panel1/barcode01) [$params.panels]
-        --candidates                VCF candidate variant file to select variants to call with Megalodon [${params.candidates}]
-
-        --reads_per_guppy_batch     number of reads to batch for concurrent processing with Guppy [${params.reads_per_guppy_batch}]
-        --guppy_server_path         server path to guppy, inside container at: "/usr/bin/local" [${params.guppy_server_path}] 
-        --guppy_params              string of additional parameters to pass to Guppy, should contain model directory inside container: "-d /guppy_models" [${params.guppy_params}]
-        --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
-        --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
-
-    DeNovo Variants
-
-        --fastq                     glob to FASTQ files for variant calling with Medaka or Clair ["${params.fastq}"]
-        --caller                    variant caller to use, one of: medaka, clair [${params.caller}]
-        --medaka_model              Medaka model to use for variant calling [${params.medaka_model}]
-        --coverage                  Comma delimited string of target coverage to subsample before variant calling [${params.subsample}]
-        --genome_size               Genome size for subsampling in Rasusa [${params.genome_size}]
-
-    SNP Polisher: Random Forest Training
-
-        --
-    
-    SNP Polisher: Random Forest Evaluation
-
-        --
-
-    SNP Polisher: Random Forest Polishing
-
-        --
+            nextflow run np-core/np-variants --workflow snippy --config default -profile docker 
 
     =========================================
 
@@ -382,16 +345,7 @@ def showTrainingConfiguration() {
     Coverage subsets        : ${train_coverages}
     Training test size      : ${params.test_size}
 
-    Model collections       : ${model_collections}
-
-
-    Model evaluation
-    ================
-
-    Evaluation directory   : ${params.eval_dir}
-    Mask weak sites        : ${params.mask_weak}
-
-    Evaluation collections : ${evaluation_collections}
+    Model training sets     : ${model_collections}
 
     """.stripIndent()
 } 
@@ -436,11 +390,6 @@ def get_train_data(train_dir){
 }
 
 
-def get_eval_models() {
-
-    return Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
-}
-
 workflow train_forest {
     take:
         train_data  // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
@@ -476,7 +425,7 @@ workflow train_forest {
 //             eval_variants = ClairEvaluation(mapped)
 //         }
 
-//         eval_models = get_eval_models()
+//         eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
 //         EvaluateRandomForest(eval_variants, eval_models) | collect | ProcessEvaluations
 //     emit:
 //         null
@@ -548,3 +497,53 @@ workflow {
 
 
 }
+
+// """
+
+//     Required configuration:
+
+//         --workflow                  select the variant subworkflow to select: core, candidate, denovo [${params.workflow}]        
+//         --reference                 reference genome (FASTA) for alignment and variant calling [${params.reference}]
+//         --outdir                    output directory for results from workflow [${params.outdir}]
+
+//     Snippy / Snippy-Core:
+
+//         --fastq | --fasta           glob to FASTQ and/or FASTA files for variant calling in Snippy ["${params.fastq}" | "${params.fasta}"]
+//         --snippy_params             string of additional parameters passed to Snippy ["${params.snippy_params}"]
+//         --gubbins_params            string of additional parameters passed to Gubbins ["${params.gubbins_params}"]
+
+//     Candidate Megalodon:
+
+//         Model configuration files for Guppy can be found inside the container at: /guppy_models
+
+//         --fast5                     directory or glob of directories containing Fast5 files for a single sample [${params.path}]
+//         --panels                    path to nested panel directories, which contain barcode subdirectories (e.g. fast5/panel1/barcode01) [$params.panels]
+//         --candidates                VCF candidate variant file to select variants to call with Megalodon [${params.candidates}]
+
+//         --reads_per_guppy_batch     number of reads to batch for concurrent processing with Guppy [${params.reads_per_guppy_batch}]
+//         --guppy_server_path         server path to guppy, inside container at: "/usr/bin/local" [${params.guppy_server_path}] 
+//         --guppy_params              string of additional parameters to pass to Guppy, should contain model directory inside container: "-d /guppy_models" [${params.guppy_params}]
+//         --guppy_config              name of guppy basecalling configuration file [${params.guppy_config}]
+//         --guppy_devices             string of space delimited list of GPU devices for Guppy (e.g. "0 1") [${params.guppy_devices}]
+
+//     DeNovo Variants
+
+//         --fastq                     glob to FASTQ files for variant calling with Medaka or Clair ["${params.fastq}"]
+//         --caller                    variant caller to use, one of: medaka, clair [${params.caller}]
+//         --medaka_model              Medaka model to use for variant calling [${params.medaka_model}]
+//         --coverage                  Comma delimited string of target coverage to subsample before variant calling [${params.subsample}]
+//         --genome_size               Genome size for subsampling in Rasusa [${params.genome_size}]
+
+//     SNP Polisher: Random Forest Training
+
+//         --
+    
+//     SNP Polisher: Random Forest Evaluation
+
+//         --
+
+//     SNP Polisher: Random Forest Polishing
+
+//         --
+
+// """
