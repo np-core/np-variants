@@ -391,63 +391,46 @@ def get_train_data(train_dir){
 
 
 workflow train_forest {
-    take:
-        train_data  // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
-    main:
-        fastq_model_cov = RasusaTraining(train_data, train_coverages)
-        mapped_model_cov = MinimapTraining(fastq_model_cov)
-        if (params.caller == "medaka"){
-            variants_model_cov = MedakaTraining(mapped_model_cov)
-        } else if (params.caller == "clair"){
-            variants_model_cov = ClairTraining(mapped_model_cov)
-        }
-        variants_model_cov | groupTuple(by: [0, 1] ) | RandomForestTraining   // by model_name, refname, reference     
-    emit:
-        RandomForestTraining.out
+    // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
+    
+    train_data = get_train_data(params.train_dir) | FastpTraining
+    models = SnippyTraining(train_data, train_references) 
 
+    fastq_model_cov = RasusaTraining(models, train_coverages)
+    mapped_model_cov = MinimapTraining(fastq_model_cov)
+
+    if (params.caller == "medaka"){
+        variants_model_cov = MedakaTraining(mapped_model_cov)
+    } else if (params.caller == "clair"){
+        variants_model_cov = ClairTraining(mapped_model_cov)
+    }
+
+    variants_model_cov | groupTuple(by: [0, 1] ) | RandomForestTraining   // by model_name, refname, reference     
 }
 
 
-// workflow eval_forest {
-//     take:
-//         eve  // null
-//     main:
-        
-//         illumina = Channel.fromFilePairs("${params.eval_dir}/${params.illumina_glob}", flat: true, type: 'file') | FastpEvaluation
-//         SnippyEvaluation(illumina, eval_references)  // call reference Illumina evaluation isolates with Snippy for each reference
-        
-//         ont = Channel.fromPath("${params.eval_dir}/${params.ont_glob}", type: 'file')
-//         mapped = MinimapEvaluation(ont, eval_references) // prep  ONT SNP calls with Clair for each reference
-        
-//         if (params.caller == "medaka"){
-//             eval_variants = MedakaEvaluation(mapped)
-//         } else if (params.caller == "clair"){
-//             eval_variants = ClairEvaluation(mapped)
-//         }
+workflow eval_forest {
+   
+    illumina = Channel.fromFilePairs("${params.eval_dir}/${params.illumina_glob}", flat: true, type: 'file') | FastpEvaluation
+    illumina_snps = SnippyEvaluation(illumina, eval_references)  // call reference Illumina evaluation isolates with Snippy for each reference
 
-//         eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
-//         EvaluateRandomForest(eval_variants, eval_models) | collect | ProcessEvaluations
-//     emit:
-//         null
-// }
+    ont = Channel.fromPath("${params.eval_dir}/${params.ont_glob}", type: 'file')
+    mapped = MinimapEvaluation(ont, eval_references) // prep  ONT SNP calls with Clair for each reference
 
-workflow random_forest {
+    if (params.caller == "medaka"){
 
-    take:
-        reads
-    main:
-        if (params.subworkflow == "train") {
-            showTrainingConfiguration()
-            train_data = get_train_data(params.train_dir) | FastpTraining
-            models = SnippyTraining(train_data, train_references) | train_forest
-        } else if (params.subworkflow == "eval"){
-            showEvaluationConfiguration()
-          
-        }
-    emit:
-        null
+        ont_snps = MedakaEvaluation(mapped)
+    } else if (params.caller == "clair"){
+        ont_snps = ClairEvaluation(mapped)
+    }
+
+    snps = illumina_snps.join(ont_snps, by: [0, 1])
+    eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
+
+    EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
 
 }
+
 
 workflow {
     
@@ -486,11 +469,11 @@ workflow {
     } else if (params.workflow == "random_forest"){
 
         if (params.subworkflow == "train") {
-            showTrainingConfiguration()
-            train_data = get_train_data(params.train_dir) | FastpTraining
-            models = SnippyTraining(train_data, train_references) | train_forest
+            showTrainingConfiguration() 
+            train_forest()
         } else if (params.subworkflow == "eval"){
             showEvaluationConfiguration()
+            eval_forest()
         }
 
     }
