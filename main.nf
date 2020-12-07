@@ -392,7 +392,7 @@ def get_train_data(train_dir){
 
 workflow train_forest {
     // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
-    
+
     train_data = get_train_data(params.train_dir) | FastpTraining
     models = SnippyTraining(train_data, train_references) 
 
@@ -418,15 +418,14 @@ workflow eval_forest {
     mapped = MinimapEvaluation(ont, eval_references) // prep  ONT SNP calls with Clair for each reference
 
     if (params.caller == "medaka"){
-
         ont_snps = MedakaEvaluation(mapped)
     } else if (params.caller == "clair"){
         ont_snps = ClairEvaluation(mapped)
     }
 
     snps = illumina_snps.join(ont_snps, by: [0, 1])
-    eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
 
+    eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
     EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
 
 }
