@@ -300,15 +300,9 @@ if (params.train_references) {
 train_coverages = [2, 5, 10, 30, 50, 100]
 
 params.eval_dir = ""
+params.model_dir = ""
 params.mask_weak = 0.8
 params.eval_references = ""
-params.eval_models = ""
-
-if (params.eval_models) {
-    eval_references = params.eval_references.split(",").collect { file(it) }
-} else {
-    eval_references = null
-}
 
 if (params.eval_references) {
     eval_references = params.eval_references.split(",").collect { file(it) }
@@ -383,7 +377,7 @@ def showEvaluationConfiguration(){
     Evaluation models      : ${params.eval_models}
     Mask weak sites        : ${params.mask_weak}
 
-    Evaluation models      : ${params.eval_models}
+    Model directory        : ${params.model_dir}
 
     """.stripIndent()
 
@@ -441,7 +435,7 @@ workflow eval_forest {
 
     snps | view
 
-    eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
+    eval_models = Channel.fromPath("${params.eval_models}/*.composite.sav", type: 'file')
     EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
 
 }
