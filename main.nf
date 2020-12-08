@@ -323,7 +323,7 @@ include { MedakaTraining } from './modules/medaka'
 include { RandomForestTraining } from './modules/variants'
 
 include { EvaluateRandomForest } from './modules/variants'
-include { ProcessRandomForestEvaluations } from './modules/variants'
+include { ProcessEvaluations } from './modules/variants'
 
 
 
@@ -344,7 +344,9 @@ def showTrainingConfiguration() {
     Training references     : ${train_references}
     Coverage subsets        : ${train_coverages}
     Training test size      : ${params.test_size}
-
+    
+    ---------------
+    
     Model training sets     : ${model_collections}
 
     """.stripIndent()
@@ -424,6 +426,8 @@ workflow eval_forest {
     }
 
     snps = illumina_snps.join(ont_snps, by: [0, 1])
+
+    snps | view
 
     eval_models = Channel.fromPath("${eval_models}/*.composite.sav", type: 'file')
     EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
