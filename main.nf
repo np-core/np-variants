@@ -437,11 +437,11 @@ workflow train_forest {
 
 workflow eval_forest {
    
-    illumina = Channel.fromFilePairs("${params.eval_dir}/${params.illumina_glob}", flat: true, type: 'file') | FastpEvaluation
+    illumina = get_eval_illumina(params.eval_dir) | FastpEvaluation
     illumina_snps = SnippyEvaluation(illumina, eval_references)  // call reference Illumina evaluation isolates with Snippy for each reference
 
-    ont = Channel.fromPath("${params.eval_dir}/${params.ont_glob}", type: 'file').map { tuple(it.simpleName,  it) }
-    mapped = MinimapEvaluation(ont, eval_references) // prep  ONT SNP calls with Clair for each reference
+    ont = get_eval_ont(params.eval_dir)
+    mapped = MinimapEvaluation(ont, eval_references) // ONT SNP calls with Clair for each reference
 
     if (params.caller == "medaka"){
         ont_snps = MedakaEvaluation(mapped)
@@ -449,7 +449,7 @@ workflow eval_forest {
         ont_snps = ClairEvaluation(mapped)
     }
 
-    snps = illumina_snps.join(ont_snps, by: [0, 1, 2])
+    snps = illumina_snps.join(ont_snps, by: [0, 1, 2])  // merge by (id, evaluation set, reference) matches (ont / illumina)
 
     snps | view
 
