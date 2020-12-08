@@ -453,7 +453,7 @@ workflow eval_forest {
 
     snps | view
 
-    eval_models = Channel.fromPath("${params.eval_dir}/*.composite.sav", type: 'file')
+    eval_models = Channel.fromPath("${params.model_dir}/*.composite.sav", type: 'file')
     evaluations = EvaluateRandomForest(snps, eval_models) 
 
     evals = evaluations[0] | collect
