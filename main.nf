@@ -397,6 +397,24 @@ def get_train_data(train_dir){
 
 }
 
+def get_eval_illumina(eval_dir){
+
+    // Get the training data from train_dir/{model_name}
+
+    return channel.fromFilePairs("${train_dir}/**/${params.illumina_glob}", type: 'file', flat: true)
+        .map { tuple(it[1].getParent().getName(), it[0], it[1], it[2]) } // eval set, id, fw, rev
+
+}
+
+def get_eval_ont(eval_dir){
+
+    // Get the training data from train_dir/{model_name}
+
+    return channel.fromPath("${train_dir}/**/${params.ont_glob}", type: 'file')
+        .map { tuple(it.getParent().getName(), it.simpleName,  it) } // eval set, id, fq
+
+}
+
 
 workflow train_forest {
     // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
@@ -431,12 +449,16 @@ workflow eval_forest {
         ont_snps = ClairEvaluation(mapped)
     }
 
-    snps = illumina_snps.join(ont_snps, by: [0, 1])
+    snps = illumina_snps.join(ont_snps, by: [0, 1, 2])
 
     snps | view
 
     eval_models = Channel.fromPath("${params.eval_dir}/*.composite.sav", type: 'file')
-    EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
+    evaluations = EvaluateRandomForest(snps, eval_models) 
+
+    evals = evaluations[0] | collect
+    
+    ProcessEvaluations(evals, evaluations[1])
 
 }
 
