@@ -372,13 +372,11 @@ def showEvaluationConfiguration(){
     Model evaluation
     ================
 
+    Model directory        : ${params.model_dir}
     Evaluation directory   : ${params.eval_dir}
     Evaluation references  : ${params.eval_references}
-    Evaluation models      : ${params.eval_models}
     Mask weak sites        : ${params.mask_weak}
-
-    Model directory        : ${params.model_dir}
-
+    
     """.stripIndent()
 
 }
