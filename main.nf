@@ -376,7 +376,7 @@ def showEvaluationConfiguration(){
     Evaluation directory   : ${params.eval_dir}
     Evaluation references  : ${params.eval_references}
     Mask weak sites        : ${params.mask_weak}
-    
+
     """.stripIndent()
 
 }
@@ -449,14 +449,8 @@ workflow eval_forest {
 
     snps = illumina_snps.join(ont_snps, by: [0, 1, 2])  // merge by (id, evaluation set, reference) matches (ont / illumina)
 
-    snps | view
-
     eval_models = Channel.fromPath("${params.model_dir}/*.composite.sav", type: 'file')
-    evaluations = EvaluateRandomForest(snps, eval_models) 
-
-    evals = evaluations[0] | collect
-    
-    ProcessEvaluations(evals, evaluations[1])
+    EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
 
 }
 
