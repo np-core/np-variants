@@ -383,7 +383,7 @@ def showEvaluationConfiguration(){
     Evaluation models      : ${params.eval_models}
     Mask weak sites        : ${params.mask_weak}
 
-    Evaluation models      : ${eval_models}
+    Evaluation models      : ${params.eval_models}
 
     """.stripIndent()
 
