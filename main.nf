@@ -322,6 +322,11 @@ include { ClairTraining } from './modules/clair'
 include { MedakaTraining } from './modules/medaka'
 include { RandomForestTraining } from './modules/variants'
 
+include { FastpEvaluation } from './modules/fastp'
+include { SnippyEvaluation  } from './modules/snippy'
+include { MinimapEvaluation  } from './modules/minimap2'
+include { ClairEvaluation } from './modules/clair'
+include { MedakaEvaluation } from './modules/medaka'
 include { EvaluateRandomForest } from './modules/variants'
 include { ProcessEvaluations } from './modules/variants'
 
