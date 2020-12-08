@@ -302,6 +302,13 @@ train_coverages = [2, 5, 10, 30, 50, 100]
 params.eval_dir = ""
 params.mask_weak = 0.8
 params.eval_references = ""
+params.eval_models = ""
+
+if (params.eval_models) {
+    eval_references = params.eval_references.split(",").collect { file(it) }
+} else {
+    eval_references = null
+}
 
 if (params.eval_references) {
     eval_references = params.eval_references.split(",").collect { file(it) }
@@ -376,7 +383,7 @@ def showEvaluationConfiguration(){
     Evaluation models      : ${params.eval_models}
     Mask weak sites        : ${params.mask_weak}
 
-    Evaluation collections : ${evaluation_collections}
+    Evaluation models      : ${eval_models}
 
     """.stripIndent()
 
