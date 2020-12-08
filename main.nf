@@ -401,7 +401,7 @@ def get_eval_illumina(eval_dir){
 
     // Get the training data from train_dir/{model_name}
 
-    return channel.fromFilePairs("${train_dir}/**/${params.illumina_glob}", type: 'file', flat: true)
+    return channel.fromFilePairs("${eval_dir}/**/${params.illumina_glob}", type: 'file', flat: true)
         .map { tuple(it[1].getParent().getName(), it[0], it[1], it[2]) } // eval set, id, fw, rev
 
 }
@@ -410,7 +410,7 @@ def get_eval_ont(eval_dir){
 
     // Get the training data from train_dir/{model_name}
 
-    return channel.fromPath("${train_dir}/**/${params.ont_glob}", type: 'file')
+    return channel.fromPath("${eval_dir}/**/${params.ont_glob}", type: 'file')
         .map { tuple(it.getParent().getName(), it.simpleName,  it) } // eval set, id, fq
 
 }
