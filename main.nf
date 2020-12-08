@@ -422,7 +422,7 @@ workflow eval_forest {
     illumina = Channel.fromFilePairs("${params.eval_dir}/${params.illumina_glob}", flat: true, type: 'file') | FastpEvaluation
     illumina_snps = SnippyEvaluation(illumina, eval_references)  // call reference Illumina evaluation isolates with Snippy for each reference
 
-    ont = Channel.fromPath("${params.eval_dir}/${params.ont_glob}", type: 'file')
+    ont = Channel.fromPath("${params.eval_dir}/${params.ont_glob}", type: 'file').map { tuple(it.simpleName,  it) }
     mapped = MinimapEvaluation(ont, eval_references) // prep  ONT SNP calls with Clair for each reference
 
     if (params.caller == "medaka"){
