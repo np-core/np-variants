@@ -448,7 +448,7 @@ workflow eval_forest {
     }
 
     snps = illumina_snps.join(ont_snps, by: [0, 1, 2])  // merge by (id, evaluation set, reference) matches (ont / illumina)
-    snps | view
+
     eval_models = Channel.fromPath("${params.model_dir}/*.composite.sav", type: 'file')
     EvaluateRandomForest(snps, eval_models) | collect | ProcessEvaluations
 
