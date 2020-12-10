@@ -118,6 +118,12 @@ params.coverage = ""
 params.genome_size = "2.8m"
 
 
+params.medaka_model = "r941_min_high_g360"
+
+if ( file(params.medaka_model).exists() ){
+    params.medaka_model = file(params.medaka_model)
+}
+
 if ( params.coverage instanceof String ){
     coverage = params.coverage.split(",").collect { it }
 } else {
@@ -412,12 +418,6 @@ def get_eval_ont(eval_dir){
 
 }
 
-
-params.medaka_model = "r941_min_high_g360"
-
-if ( file(params.medaka_model).exists() ){
-    params.medaka_model  = file(params.medaka_model)
-}
 
 
 workflow train_forest {
