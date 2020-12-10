@@ -416,9 +416,7 @@ def get_eval_ont(eval_dir){
 params.medaka_model = "r941_min_high_g360"
 
 if ( file(params.medaka_model).exists() ){
-    medaka_model = file(params.medaka_model)
-} else {
-    medaka_model = params.medaka_model
+    params.medaka_model  = file(params.medaka_model)
 }
 
 
@@ -432,7 +430,7 @@ workflow train_forest {
     mapped_model_cov = MinimapTraining(fastq_model_cov)
 
     if (params.caller == "medaka"){
-        variants_model_cov = MedakaTraining(mapped_model_cov, medaka_model)
+        variants_model_cov = MedakaTraining(mapped_model_cov)
     } else if (params.caller == "clair"){
         variants_model_cov = ClairTraining(mapped_model_cov)
     }
@@ -450,7 +448,7 @@ workflow eval_forest {
     mapped = MinimapEvaluation(ont, eval_references) // ONT SNP calls with Clair for each reference
 
     if (params.caller == "medaka"){
-        ont_snps = MedakaEvaluation(mapped, medaka_model)
+        ont_snps = MedakaEvaluation(mapped)
     } else if (params.caller == "clair"){
         ont_snps = ClairEvaluation(mapped)
     }
