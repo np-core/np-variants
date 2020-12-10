@@ -415,8 +415,7 @@ def get_eval_ont(eval_dir){
 
 params.medaka_model = "r941_min_high_g360"
 
-
-if ( File(params.medaka_model).exists() ){
+if ( file(params.medaka_model).exists() ){
     medaka_model = file(params.medaka_model)
 } else {
     medaka_model = params.medaka_model
