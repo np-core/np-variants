@@ -112,7 +112,6 @@ params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg" // Rerio:
 // De novo
 
 params.caller = "clair"
-params.medaka_model = "r941_min_high_g360"
 params.clair_model = "/clair_models/model"
 params.clair_haploid = "--haploid_sensitive"
 params.coverage = ""
@@ -414,6 +413,16 @@ def get_eval_ont(eval_dir){
 }
 
 
+params.medaka_model = "r941_min_high_g360"
+
+
+if ( File(params.medaka_model).exists() ){
+    medaka_model = file(params.medaka_model)
+} else {
+    medaka_model = params.medaka_model
+}
+
+
 workflow train_forest {
     // model_name, isolate_id, reference_name, reference_file, ont_fq, illumina_vcf
 
@@ -424,7 +433,7 @@ workflow train_forest {
     mapped_model_cov = MinimapTraining(fastq_model_cov)
 
     if (params.caller == "medaka"){
-        variants_model_cov = MedakaTraining(mapped_model_cov)
+        variants_model_cov = MedakaTraining(mapped_model_cov, medaka_model)
     } else if (params.caller == "clair"){
         variants_model_cov = ClairTraining(mapped_model_cov)
     }
@@ -442,7 +451,7 @@ workflow eval_forest {
     mapped = MinimapEvaluation(ont, eval_references) // ONT SNP calls with Clair for each reference
 
     if (params.caller == "medaka"){
-        ont_snps = MedakaEvaluation(mapped)
+        ont_snps = MedakaEvaluation(mapped, medaka_model)
     } else if (params.caller == "clair"){
         ont_snps = ClairEvaluation(mapped)
     }
