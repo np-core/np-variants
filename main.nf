@@ -427,11 +427,11 @@ workflow train_forest {
     models = SnippyTraining(train_data, train_references) 
 
     fastq_model_cov = RasusaTraining(models, train_coverages)
-    mapped_model_cov = MinimapTraining(fastq_model_cov)
-
+    
     if (params.caller == "medaka"){
-        variants_model_cov = MedakaTraining(mapped_model_cov)
+        variants_model_cov = MedakaTraining(fastq_model_cov)
     } else if (params.caller == "clair"){
+        mapped_model_cov = MinimapTraining(fastq_model_cov)
         variants_model_cov = ClairTraining(mapped_model_cov)
     }
 
