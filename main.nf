@@ -445,11 +445,10 @@ workflow eval_forest {
     illumina_snps = SnippyEvaluation(illumina, eval_references)  // call reference Illumina evaluation isolates with Snippy for each reference
 
     ont = get_eval_ont(params.eval_dir)
-    mapped = MinimapEvaluation(ont, eval_references) // ONT SNP calls with Clair for each reference
-
     if (params.caller == "medaka"){
-        ont_snps = MedakaEvaluation(mapped)
+        ont_snps = MedakaEvaluation(ont, eval_references)
     } else if (params.caller == "clair"){
+        mapped = MinimapEvaluation(ont, eval_references) // ONT SNP calls with Clair for each reference
         ont_snps = ClairEvaluation(mapped)
     }
 
