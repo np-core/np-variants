@@ -272,15 +272,14 @@ workflow denovo_snps {
         if (params.coverage){
             fastq = RasusaMulti(fastq, coverage)
         }
-        mapped = MinimapONT(fastq, reference)
         if (params.caller == "medaka"){
-            variants = MedakaVariants(mapped, reference)
+            variants = MedakaVariants(fastq, reference)
         } else if (params.caller == "clair"){
+            mapped = MinimapONT(fastq, reference)
             variants = ClairVariants(mapped, reference)
         }
     emit:
-        variants[0]  // vcf variant files
-        variants[1] // bam alignments
+        variants
 }
 
 
